@@ -17,24 +17,10 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 
 import { colors } from "../constants/colors";
+import { AuthApiError, loginUser } from "../api/authApi";
+import { saveAuthSession } from "../api/authStorage";
 
 const HEADER_SCALE = 1.2;
-
-// =========================================
-// API CONFIGURATION
-// =========================================
-//
-// Add your real API URL here later.
-//
-// Example:
-//
-// const API_BASE_URL = "https://yourwebsite.com/api";
-//
-// For now it is empty because the API
-// has not been implemented yet.
-//
-
-const API_BASE_URL = "";
 
 export default function LoginScreen({ navigation }) {
   const [email, setEmail] = useState("");
@@ -42,10 +28,6 @@ export default function LoginScreen({ navigation }) {
 
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-
-  // =========================================
-  // LOGIN
-  // =========================================
 
   const handleLogin = async () => {
     const cleanEmail = email.trim();
@@ -71,125 +53,35 @@ export default function LoginScreen({ navigation }) {
     setLoading(true);
 
     try {
-      // =======================================
-      // TEMPORARY LOGIN
-      // =======================================
-      //
-      // The API is not available yet.
-      //
-      // This allows you to test the complete
-      // login → dashboard navigation.
-      //
-      // Remove this section when the real API
-      // is connected.
-      //
-
-      if (!API_BASE_URL) {
-        Alert.alert("Login Successful", "You have successfully logged in.", [
-          {
-            text: "OK",
-            onPress: () => {
-              navigation.replace("MainApp");
-            },
-          },
-        ]);
-
-        return;
-      }
-
-      // =======================================
-      // REAL API LOGIN
-      // =======================================
-      //
-      // This will be used when your backend
-      // API is available.
-      //
-      // Login credentials:
-      //     email
-      //     password
-      //
-      // The backend should check the user's
-      // registered enrollment ID.
-      //
-
-      const response = await fetch(`${API_BASE_URL}/login`, {
-        method: "POST",
-
-        headers: {
-          "Content-Type": "application/json",
-        },
-
-        body: JSON.stringify({
-          email: cleanEmail,
-          password: password,
-        }),
+      const session = await loginUser({
+        email: cleanEmail,
+        password,
       });
 
-      const data = await response.json();
-
-      // =======================================
-      // SUCCESS
-      // =======================================
-
-      if (response.ok && data.success) {
-        Alert.alert("Login Successful", "You have successfully logged in.", [
-          {
-            text: "OK",
-            onPress: () => {
-              navigation.replace("Dashboard");
-            },
-          },
-        ]);
-
-        return;
-      }
-
-      // =======================================
-      // USER / ENROLLMENT NOT FOUND
-      // =======================================
-
-      if (
-        response.status === 404 ||
-        data.code === "USER_NOT_FOUND" ||
-        data.code === "NOT_REGISTERED"
-      ) {
-        Alert.alert(
-          "Account Not Found",
-          "This account is not registered. Please register on the website first.",
-        );
-
-        return;
-      }
-
-      // =======================================
-      // INVALID LOGIN
-      // =======================================
-
-      if (
-        response.status === 401 ||
-        data.code === "INVALID_PASSWORD" ||
-        data.code === "INVALID_CREDENTIALS"
-      ) {
-        Alert.alert("Login Failed", "The email ID or password is incorrect.");
-
-        return;
-      }
-
-      // =======================================
-      // OTHER SERVER ERROR
-      // =======================================
-
-      Alert.alert(
-        "Login Failed",
-        data.message || "Unable to login. Please try again.",
-      );
+      await saveAuthSession(session);
+      navigation.replace("MainApp");
     } catch (error) {
-      console.log("Login error:", error);
-
-      Alert.alert(
-        "Connection Error",
-        "Unable to connect to the server. Please check your internet connection and try again.",
-      );
+      if (error instanceof AuthApiError && error.status === 403) {
+        Alert.alert(
+          "Access Denied",
+          "Your account is not currently allowed to access the app.",
+        );
+      } else if (error instanceof AuthApiError && error.status === 401) {
+        Alert.alert("Login Failed", "The email ID or password is incorrect.");
+      } else if (error instanceof AuthApiError && error.status === 400) {
+        Alert.alert(
+          "Login Failed",
+          error.message || "Please check your details.",
+        );
+      } else if (error instanceof AuthApiError) {
+        Alert.alert("Login Failed", error.message);
+      } else {
+        console.log("Login error:", error);
+        Alert.alert(
+          "Connection Error",
+          "Unable to connect to the server. Please check your internet connection and try again.",
+        );
+      }
     } finally {
       setLoading(false);
     }
@@ -199,7 +91,7 @@ export default function LoginScreen({ navigation }) {
     <SafeAreaView style={styles.safeArea}>
       <KeyboardAvoidingView
         style={styles.container}
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
         <ScrollView
           showsVerticalScrollIndicator={false}

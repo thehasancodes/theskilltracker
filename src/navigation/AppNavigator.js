@@ -1,5 +1,11 @@
-import React from "react";
-import { View, Text, StyleSheet, Pressable } from "react-native";
+import React, { useEffect, useState } from "react";
+import {
+  ActivityIndicator,
+  View,
+  Text,
+  StyleSheet,
+  Pressable,
+} from "react-native";
 
 import {
   createDrawerNavigator,
@@ -16,6 +22,8 @@ import FeedbackScreen from "../screens/FeedbackScreen";
 import NotificationScreen from "../screens/NotificationScreen";
 import MCQScreen from "../screens/MCQScreen";
 import LoginScreen from "../screens/LoginScreen";
+import { clearAuthSession, getAuthToken } from "../api/authStorage";
+import { colors } from "../constants/colors";
 
 const Drawer = createDrawerNavigator();
 const Stack = createNativeStackNavigator(); // newly added stack navigator for login screen
@@ -108,8 +116,9 @@ function CustomDrawerContent(props) {
             pressed && styles.pressed,
           ]}
           onPress={() => {
-            // Add logout API/token clearing later
-            console.log("Logout pressed");
+            clearAuthSession().then(() => {
+              props.navigation.getParent()?.replace("Login");
+            });
           }}
         >
           <Text style={styles.logoutText}>Logout</Text>
@@ -183,9 +192,25 @@ function MainDrawer() {
 }
 
 export default function AppNavigator() {
+  const [initialRoute, setInitialRoute] = useState(null);
+
+  useEffect(() => {
+    getAuthToken()
+      .then((token) => setInitialRoute(token ? "MainApp" : "Login"))
+      .catch(() => setInitialRoute("Login"));
+  }, []);
+
+  if (!initialRoute) {
+    return (
+      <View style={styles.authLoading}>
+        <ActivityIndicator size="small" color={colors.purple} />
+      </View>
+    );
+  }
+
   return (
     <Stack.Navigator
-      initialRouteName="Login"
+      initialRouteName={initialRoute}
       screenOptions={{
         headerShown: false,
       }}
@@ -204,6 +229,13 @@ const styles = StyleSheet.create({
   drawerContainer: {
     flex: 1,
     backgroundColor: "#0a0a0a",
+  },
+
+  authLoading: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.background,
   },
 
   scrollContent: {
