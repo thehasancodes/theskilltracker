@@ -3,10 +3,13 @@ import React from "react";
 import { View, Text, StyleSheet, ScrollView, Pressable } from "react-native";
 
 import { SafeAreaView } from "react-native-safe-area-context";
+import { Ionicons } from "@expo/vector-icons";
 
 import DashboardCard from "../components/DashboardCard";
 import { colors } from "../constants/colors";
 import { dashboardData } from "../data/dashboardData";
+
+const HEADER_SCALE = 1.2;
 
 export default function DashboardScreen({ navigation }) {
   const { user, academic, tracks } = dashboardData;
@@ -28,7 +31,11 @@ export default function DashboardScreen({ navigation }) {
                 pressed && styles.pressed,
               ]}
             >
-              <Text style={styles.menuText}>☰</Text>
+              <Ionicons
+                name="menu"
+                size={22 * HEADER_SCALE}
+                color={colors.text}
+              />
             </Pressable>
 
             {/* Header Title */}
@@ -107,13 +114,12 @@ const styles = StyleSheet.create({
   /* Header */
 
   header: {
-    minHeight: 70,
+    minHeight: 70 * HEADER_SCALE,
 
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
 
-    paddingHorizontal: 16,
-    paddingVertical: 10,
+    paddingHorizontal: 16 * HEADER_SCALE,
 
     flexDirection: "row",
     alignItems: "center",
@@ -126,39 +132,34 @@ const styles = StyleSheet.create({
   },
 
   menuButton: {
-    width: 42,
-    height: 42,
+    width: 42 * HEADER_SCALE,
+    height: 42 * HEADER_SCALE,
 
-    borderRadius: 10,
+    borderRadius: 11 * HEADER_SCALE,
 
     backgroundColor: colors.surface,
 
     alignItems: "center",
     justifyContent: "center",
 
-    marginRight: 12,
-  },
-
-  menuText: {
-    color: colors.text,
-    fontSize: 21,
+    marginRight: 11 * HEADER_SCALE,
   },
 
   headerTitle: {
     color: colors.text,
-    fontSize: 17,
+    fontSize: 16 * HEADER_SCALE,
     fontWeight: "700",
   },
 
   welcome: {
     color: colors.muted,
 
-    fontSize: 9,
+    fontSize: 7.5 * HEADER_SCALE,
     fontWeight: "700",
 
-    letterSpacing: 0.8,
+    letterSpacing: 1,
 
-    marginTop: 3,
+    marginTop: 3 * HEADER_SCALE,
   },
 
   /* Content */
@@ -171,7 +172,7 @@ const styles = StyleSheet.create({
   /* Hero */
 
   hero: {
-    backgroundColor: colors.card,
+    backgroundColor: colors.surface,
 
     borderWidth: 1,
     borderColor: colors.border,
@@ -190,9 +191,9 @@ const styles = StyleSheet.create({
 
   heroBadge: {
     borderWidth: 1,
-    borderColor: colors.primary,
+    borderColor: colors.purple,
 
-    backgroundColor: "#16133a",
+    backgroundColor: colors.purpleDark,
 
     borderRadius: 20,
 
@@ -203,7 +204,7 @@ const styles = StyleSheet.create({
   },
 
   heroBadgeText: {
-    color: colors.primary,
+    color: colors.purple,
 
     fontSize: 9,
     fontWeight: "700",
@@ -221,7 +222,7 @@ const styles = StyleSheet.create({
   },
 
   heroSubtitle: {
-    color: "#7dd3fc",
+    color: colors.blue,
 
     fontSize: 10,
 

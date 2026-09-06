@@ -8,6 +8,9 @@ import {
 
 import DashboardScreen from "../screens/DashboardScreen";
 import SectionLeaderBoard from "../screens/SectionLeaderBoard";
+import ProfileScreen from "../screens/ProfileScreen";
+import TechnicalTracksScreen from "../screens/TechnicalTrackScreen";
+import FeedbackScreen from "../screens/FeedbackScreen";
 
 const Drawer = createDrawerNavigator();
 
@@ -59,9 +62,9 @@ function CustomDrawerContent(props) {
           />
 
           <DrawerButton
-            title="Readiness Report"
-            active={currentRoute === "ReadinessReport"}
-            onPress={() => navigate("ReadinessReport")}
+            title="Notifications"
+            active={currentRoute === "Notifications"}
+            onPress={() => navigate("Notifications")}
           />
 
           <DrawerButton
@@ -160,13 +163,13 @@ export default function AppNavigator() {
 
       <Drawer.Screen name="SectionLeaderboard" component={SectionLeaderBoard} />
 
-      <Drawer.Screen name="TechnicalTracks" component={PlaceholderScreen} />
+      <Drawer.Screen name="TechnicalTracks" component={TechnicalTracksScreen} />
 
-      <Drawer.Screen name="ReadinessReport" component={PlaceholderScreen} />
+      <Drawer.Screen name="Notifications" component={PlaceholderScreen} />
 
-      <Drawer.Screen name="SuggestionsBugs" component={PlaceholderScreen} />
+      <Drawer.Screen name="SuggestionsBugs" component={FeedbackScreen} />
 
-      <Drawer.Screen name="MyProfile" component={PlaceholderScreen} />
+      <Drawer.Screen name="MyProfile" component={ProfileScreen} />
     </Drawer.Navigator>
   );
 }

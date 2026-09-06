@@ -12,7 +12,7 @@ export default function DashboardCard({
   accent = "primary",
   onPress,
 }) {
-  const accentColor = accent === "cyan" ? colors.cyan : colors.primary;
+  const accentColor = accent === "cyan" ? colors.cyan : colors.purple;
 
   return (
     <Pressable
@@ -26,7 +26,7 @@ export default function DashboardCard({
             {
               borderColor: accentColor,
               backgroundColor:
-                accent === "cyan" ? colors.cyanDark : colors.primaryDark,
+                accent === "cyan" ? colors.cyanDark : colors.purpleDark,
             },
           ]}
         >
@@ -51,7 +51,7 @@ export default function DashboardCard({
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: colors.card,
+    backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: 16,

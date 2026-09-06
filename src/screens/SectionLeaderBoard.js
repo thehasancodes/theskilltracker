@@ -12,6 +12,8 @@ import { Ionicons } from "@expo/vector-icons";
 
 import { colors } from "../constants/colors";
 
+const HEADER_SCALE = 1.2;
+
 /* =========================================================
    MOCK DATA
    Replace this with API data later
@@ -97,7 +99,13 @@ function RankBadge({ rank, current = false }) {
         <Ionicons
           name={icon}
           size={13}
-          color={rank === 1 ? "#fbbf24" : rank === 2 ? "#cbd5e1" : "#d97706"}
+          color={
+            rank === 1
+              ? colors.yellow
+              : rank === 2
+                ? colors.text
+                : colors.yellow
+          }
         />
       ) : null}
 
@@ -260,7 +268,11 @@ export default function SectionLeaderBoard({ navigation }) {
             <View style={styles.statCard}>
               <View style={styles.statHeader}>
                 <View style={styles.iconCircleGold}>
-                  <Ionicons name="trophy-outline" size={16} color="#fbbf24" />
+                  <Ionicons
+                    name="trophy-outline"
+                    size={16}
+                    color={colors.yellow}
+                  />
                 </View>
 
                 <Text style={styles.goldLabel}>SECTION CHAMPION</Text>
@@ -282,7 +294,11 @@ export default function SectionLeaderBoard({ navigation }) {
             <View style={styles.statCard}>
               <View style={styles.statHeader}>
                 <View style={styles.iconCirclePurple}>
-                  <Ionicons name="podium-outline" size={16} color="#818cf8" />
+                  <Ionicons
+                    name="podium-outline"
+                    size={16}
+                    color={colors.purple}
+                  />
                 </View>
 
                 <Text style={styles.purpleLabel}>YOUR RANK</Text>
@@ -378,7 +394,7 @@ export default function SectionLeaderBoard({ navigation }) {
             <Ionicons
               name="information-circle-outline"
               size={18}
-              color="#64748b"
+              color={colors.mutedDark}
             />
 
             <Text style={styles.infoText}>
@@ -427,10 +443,9 @@ const styles = StyleSheet.create({
   ------------------------------------------------------- */
 
   header: {
-    minHeight: 70,
+    minHeight: 70 * HEADER_SCALE,
 
-    paddingHorizontal: 16,
-    paddingVertical: 10,
+    paddingHorizontal: 16 * HEADER_SCALE,
 
     flexDirection: "row",
     alignItems: "center",
@@ -447,10 +462,10 @@ const styles = StyleSheet.create({
   },
 
   menuButton: {
-    width: 42,
-    height: 42,
+    width: 42 * HEADER_SCALE,
+    height: 42 * HEADER_SCALE,
 
-    borderRadius: 11,
+    borderRadius: 11 * HEADER_SCALE,
 
     backgroundColor: colors.surface,
 
@@ -460,25 +475,25 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
 
-    marginRight: 12,
+    marginRight: 11 * HEADER_SCALE,
   },
 
   headerTitle: {
     color: colors.text,
-    fontSize: 17,
+    fontSize: 16 * HEADER_SCALE,
     fontWeight: "700",
   },
 
   headerWelcome: {
     color: colors.muted,
-    fontSize: 9,
+    fontSize: 7.5 * HEADER_SCALE,
     fontWeight: "700",
-    letterSpacing: 0.7,
-    marginTop: 3,
+    letterSpacing: 1,
+    marginTop: 3 * HEADER_SCALE,
   },
 
   headerName: {
-    color: "#b6becb",
+    color: colors.text,
   },
 
   /* -------------------------------------------------------
@@ -520,19 +535,19 @@ const styles = StyleSheet.create({
 
     borderRadius: 20,
 
-    backgroundColor: "#211d46",
+    backgroundColor: colors.purpleDark,
 
     borderWidth: 1,
-    borderColor: "#4c43a4",
+    borderColor: colors.purpleBorder,
   },
 
   badgeCyan: {
-    backgroundColor: "#102d36",
-    borderColor: "#155e75",
+    backgroundColor: colors.blueDark,
+    borderColor: colors.cyanDark,
   },
 
   badgeText: {
-    color: "#938aff",
+    color: colors.purple,
 
     fontSize: 8,
     fontWeight: "800",
@@ -541,7 +556,7 @@ const styles = StyleSheet.create({
   },
 
   badgeTextCyan: {
-    color: "#22d3ee",
+    color: colors.cyan,
   },
 
   heroTitle: {
@@ -560,7 +575,7 @@ const styles = StyleSheet.create({
 
     marginTop: 10,
 
-    color: "#7899ba",
+    color: colors.muted,
 
     fontSize: 11,
 
@@ -613,7 +628,7 @@ const styles = StyleSheet.create({
 
     borderRadius: 8,
 
-    backgroundColor: "#261a05",
+    backgroundColor: colors.yellowDark,
 
     alignItems: "center",
     justifyContent: "center",
@@ -625,14 +640,14 @@ const styles = StyleSheet.create({
 
     borderRadius: 8,
 
-    backgroundColor: "#211d46",
+    backgroundColor: colors.purpleDark,
 
     alignItems: "center",
     justifyContent: "center",
   },
 
   goldLabel: {
-    color: "#fbbf24",
+    color: colors.yellow,
 
     fontSize: 8,
     fontWeight: "800",
@@ -641,7 +656,7 @@ const styles = StyleSheet.create({
   },
 
   purpleLabel: {
-    color: "#818cf8",
+    color: colors.purple,
 
     fontSize: 8,
     fontWeight: "800",
@@ -659,7 +674,7 @@ const styles = StyleSheet.create({
   },
 
   championStats: {
-    color: "#94a3b8",
+    color: colors.muted,
 
     fontSize: 10,
 
@@ -681,7 +696,7 @@ const styles = StyleSheet.create({
   },
 
   rankOf: {
-    color: "#64748b",
+    color: colors.mutedDark,
 
     fontSize: 10,
 
@@ -689,7 +704,7 @@ const styles = StyleSheet.create({
   },
 
   rankAhead: {
-    color: "#94a3b8",
+    color: colors.muted,
 
     fontSize: 10,
 
@@ -729,7 +744,7 @@ const styles = StyleSheet.create({
   },
 
   leaderboardSubtitle: {
-    color: "#64748b",
+    color: colors.mutedDark,
 
     fontSize: 9,
 
@@ -745,10 +760,10 @@ const styles = StyleSheet.create({
 
     borderRadius: 20,
 
-    backgroundColor: "#10241d",
+    backgroundColor: colors.greenDark,
 
     borderWidth: 1,
-    borderColor: "#164e3a",
+    borderColor: colors.greenDark,
   },
 
   liveDot: {
@@ -757,13 +772,13 @@ const styles = StyleSheet.create({
 
     borderRadius: 5,
 
-    backgroundColor: "#6ee7b7",
+    backgroundColor: colors.green,
 
     marginRight: 5,
   },
 
   liveText: {
-    color: "#6ee7b7",
+    color: colors.green,
 
     fontSize: 7,
     fontWeight: "800",
@@ -779,7 +794,7 @@ const styles = StyleSheet.create({
     overflow: "hidden",
 
     borderWidth: 1,
-    borderColor: "#262626",
+    borderColor: colors.border,
 
     borderRadius: 12,
   },
@@ -790,14 +805,14 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
 
-    backgroundColor: "#090909",
+    backgroundColor: colors.background,
 
     borderBottomWidth: 1,
-    borderBottomColor: "#292929",
+    borderBottomColor: colors.border,
   },
 
   tableHeaderText: {
-    color: "#6f91b4",
+    color: colors.muted,
 
     fontSize: 7.5,
     fontWeight: "800",
@@ -841,14 +856,14 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
 
-    backgroundColor: "#0b0b0b",
+    backgroundColor: colors.footer,
 
     borderBottomWidth: 1,
-    borderBottomColor: "#222222",
+    borderBottomColor: colors.border,
   },
 
   currentStudentRow: {
-    backgroundColor: "#141329",
+    backgroundColor: colors.purpleDark,
 
     borderBottomWidth: 0,
   },
@@ -863,10 +878,10 @@ const styles = StyleSheet.create({
 
     borderRadius: 9,
 
-    backgroundColor: "#18202c",
+    backgroundColor: colors.blueDark,
 
     borderWidth: 1,
-    borderColor: "#334155",
+    borderColor: colors.borderLight,
 
     alignItems: "center",
     justifyContent: "center",
@@ -877,23 +892,23 @@ const styles = StyleSheet.create({
   },
 
   rankOne: {
-    backgroundColor: "#261a05",
-    borderColor: "#8a5700",
+    backgroundColor: colors.yellowDark,
+    borderColor: colors.yellow,
   },
 
   rankTwo: {
-    backgroundColor: "#1b2532",
-    borderColor: "#475569",
+    backgroundColor: colors.surface3,
+    borderColor: colors.borderLight,
   },
 
   rankThree: {
-    backgroundColor: "#241806",
-    borderColor: "#8a5700",
+    backgroundColor: colors.yellowDark,
+    borderColor: colors.yellow,
   },
 
   rankCurrent: {
-    backgroundColor: "#211d46",
-    borderColor: "#4c43a4",
+    backgroundColor: colors.purpleDark,
+    borderColor: colors.purpleBorder,
   },
 
   rankText: {
@@ -904,7 +919,7 @@ const styles = StyleSheet.create({
   },
 
   rankCurrentText: {
-    color: "#a5b4fc",
+    color: colors.purple,
   },
 
   /* -------------------------------------------------------
@@ -928,11 +943,11 @@ const styles = StyleSheet.create({
   },
 
   currentStudentName: {
-    color: "#c7c9ff",
+    color: colors.purple,
   },
 
   studentEmail: {
-    color: "#648db5",
+    color: colors.muted,
 
     fontSize: 7.5,
 
@@ -947,11 +962,11 @@ const styles = StyleSheet.create({
 
     borderRadius: 5,
 
-    backgroundColor: "#5b4de8",
+    backgroundColor: colors.primary,
   },
 
   youBadgeText: {
-    color: "#ffffff",
+    color: colors.white,
 
     fontSize: 6,
     fontWeight: "900",
@@ -973,10 +988,10 @@ const styles = StyleSheet.create({
 
     borderRadius: 7,
 
-    backgroundColor: "#090909",
+    backgroundColor: colors.background,
 
     borderWidth: 1,
-    borderColor: "#292929",
+    borderColor: colors.border,
 
     alignItems: "center",
   },
@@ -1000,7 +1015,7 @@ const styles = StyleSheet.create({
   },
 
   mcqLabel: {
-    color: "#64748b",
+    color: colors.mutedDark,
 
     fontSize: 7,
 
@@ -1019,7 +1034,7 @@ const styles = StyleSheet.create({
 
     paddingHorizontal: 12,
 
-    backgroundColor: "#090909",
+    backgroundColor: colors.background,
 
     gap: 8,
   },
@@ -1029,11 +1044,11 @@ const styles = StyleSheet.create({
 
     height: 1,
 
-    backgroundColor: "#242424",
+    backgroundColor: colors.border,
   },
 
   separatorText: {
-    color: "#555555",
+    color: colors.mutedDark,
 
     fontSize: 6.5,
     fontWeight: "800",
@@ -1052,10 +1067,10 @@ const styles = StyleSheet.create({
 
     borderRadius: 12,
 
-    backgroundColor: "#0d0d0d",
+    backgroundColor: colors.card,
 
     borderWidth: 1,
-    borderColor: "#202020",
+    borderColor: colors.border,
 
     flexDirection: "row",
     alignItems: "center",
@@ -1064,7 +1079,7 @@ const styles = StyleSheet.create({
   infoText: {
     flex: 1,
 
-    color: "#64748b",
+    color: colors.mutedDark,
 
     fontSize: 8.5,
 
