@@ -120,19 +120,7 @@ export default function TechnicalTracksScreen({ navigation }) {
             {/* Website Indicator */}
 
             <View style={styles.websiteIndicator}>
-              <View style={styles.websiteIndicatorLeft}>
-                <View style={styles.statusDot} />
-
-                <Text style={styles.websiteIndicatorText}>
-                  AVAILABLE ON DESKTOP
-                </Text>
-              </View>
-
-              <Ionicons
-                name="open-outline"
-                size={14 * SCALE}
-                color={COLORS.muted}
-              />
+              <View style={styles.websiteIndicatorLeft}></View>
             </View>
           </View>
 
@@ -442,26 +430,6 @@ const styles = StyleSheet.create({
   websiteIndicatorLeft: {
     flexDirection: "row",
     alignItems: "center",
-  },
-
-  statusDot: {
-    width: 6 * SCALE,
-    height: 6 * SCALE,
-
-    borderRadius: 3,
-
-    backgroundColor: COLORS.green,
-
-    marginRight: 6 * SCALE,
-  },
-
-  websiteIndicatorText: {
-    color: COLORS.mutedDark,
-
-    fontSize: 6.5 * SCALE,
-    fontWeight: "800",
-
-    letterSpacing: 0.5,
   },
 
   // ==========================================================
