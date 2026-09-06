@@ -13,6 +13,8 @@ import SectionLeaderBoard from "../screens/SectionLeaderBoard";
 import ProfileScreen from "../screens/ProfileScreen";
 import TechnicalTracksScreen from "../screens/TechnicalTrackScreen";
 import FeedbackScreen from "../screens/FeedbackScreen";
+import NotificationScreen from "../screens/NotificationScreen";
+import MCQScreen from "../screens/MCQScreen";
 import LoginScreen from "../screens/LoginScreen";
 
 const Drawer = createDrawerNavigator();
@@ -169,7 +171,9 @@ function MainDrawer() {
 
       <Drawer.Screen name="TechnicalTracks" component={TechnicalTracksScreen} />
 
-      <Drawer.Screen name="Notifications" component={PlaceholderScreen} />
+      <Drawer.Screen name="MCQ" component={MCQScreen} />
+
+      <Drawer.Screen name="Notifications" component={NotificationScreen} />
 
       <Drawer.Screen name="SuggestionsBugs" component={FeedbackScreen} />
 
