@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import {
+  Alert,
   View,
   Text,
   StyleSheet,
@@ -17,6 +18,8 @@ export default function MCQScreen({ navigation, route }) {
   const { width } = useWindowDimensions();
   const isPhone = width < 700;
   const [started, setStarted] = useState(false);
+  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [answers, setAnswers] = useState({});
 
   // Later this entire object can come from your API
   const assignment = {
@@ -43,6 +46,24 @@ export default function MCQScreen({ navigation, route }) {
       options: ["Heyy there", "What's Good"],
     },
   ];
+
+  const activeQuestion = questions[currentQuestion];
+  const answeredCount = Object.keys(answers).length;
+  const progress = (answeredCount / questions.length) * 100;
+
+  const selectAnswer = (optionIndex) => {
+    setAnswers((previous) => ({
+      ...previous,
+      [activeQuestion.id]: optionIndex,
+    }));
+  };
+
+  const submitAssessment = () => {
+    Alert.alert(
+      "Assessment Submitted",
+      `You answered ${answeredCount} of ${questions.length} questions.`,
+    );
+  };
 
   /* -------------------------------------------------------
      PRE-LAUNCH SCREEN
@@ -210,7 +231,9 @@ export default function MCQScreen({ navigation, route }) {
               </View>
             </View>
 
-            <View style={styles.examStats}>
+            <View
+              style={[styles.examStats, isPhone && styles.examHeaderPhoneStats]}
+            >
               <View>
                 <Text style={styles.statLabel}>QUESTIONS</Text>
 
@@ -224,19 +247,21 @@ export default function MCQScreen({ navigation, route }) {
 
                 <Text style={styles.statValue}>{assignment.totalMarks}</Text>
               </View>
-            </View>
 
-            <View style={styles.timerContainer}>
-              <Text style={styles.timerLabel}>TIME REMAINING</Text>
+              <View style={styles.statDivider} />
 
-              <View style={styles.timer}>
-                <Ionicons
-                  name="time-outline"
-                  size={17 * SCALE}
-                  color={colors.primary}
-                />
+              <View style={styles.timerContainer}>
+                <Text style={styles.timerLabel}>TIME REMAINING</Text>
 
-                <Text style={styles.timerText}>29:41</Text>
+                <View style={styles.timer}>
+                  <Ionicons
+                    name="time-outline"
+                    size={17 * SCALE}
+                    color={colors.primary}
+                  />
+
+                  <Text style={styles.timerText}>29:41</Text>
+                </View>
               </View>
             </View>
           </View>
@@ -250,51 +275,68 @@ export default function MCQScreen({ navigation, route }) {
                 <View style={styles.progressTop}>
                   <View style={styles.questionBadge}>
                     <Text style={styles.questionBadgeText}>
-                      Question 1 / {assignment.questions}
+                      Question {currentQuestion + 1} / {assignment.questions}
                     </Text>
                   </View>
 
-                  <Text style={styles.progressText}>Progress: 0%</Text>
+                  <Text style={styles.progressText}>
+                    Progress: {Math.round(progress)}%
+                  </Text>
                 </View>
 
                 <View style={styles.progressInfo}>
-                  <Text style={styles.answered}>Answered: 0</Text>
+                  <Text style={styles.answered}>Answered: {answeredCount}</Text>
 
                   <Text style={styles.separator}>•</Text>
 
                   <Text style={styles.remaining}>
-                    Remaining: {assignment.questions}
+                    Remaining: {assignment.questions - answeredCount}
                   </Text>
                 </View>
 
                 <View style={styles.progressBar}>
-                  <View style={styles.progressFill} />
+                  <View
+                    style={[styles.progressFill, { width: `${progress}%` }]}
+                  />
                 </View>
               </View>
 
               {/* QUESTION */}
               <View style={styles.questionCard}>
                 <View style={styles.questionHeader}>
-                  <Text style={styles.questionNumber}>Q1. </Text>
+                  <Text style={styles.questionNumber}>
+                    Q{currentQuestion + 1}.{" "}
+                  </Text>
 
                   <Text style={styles.questionText}>
-                    {questions[0].question}
+                    {activeQuestion.question}
                   </Text>
 
                   <View style={styles.marksBadge}>
                     <Text style={styles.marksText}>
-                      {questions[0].marks} marks
+                      {activeQuestion.marks} marks
                     </Text>
                   </View>
                 </View>
 
-                {questions[0].options.map((option, index) => (
+                {activeQuestion.options.map((option, index) => (
                   <TouchableOpacity
                     key={index}
                     style={styles.option}
                     activeOpacity={0.7}
+                    onPress={() => selectAnswer(index)}
                   >
-                    <View style={styles.radio} />
+                    <View
+                      style={[
+                        styles.radio,
+                        answers[activeQuestion.id] === index &&
+                          styles.radioSelected,
+                      ]}
+                    >
+                      {answers[activeQuestion.id] === index && (
+                        <View style={styles.radioDot} />
+                      )}
+                    </View>
 
                     <Text style={styles.optionText}>{option}</Text>
                   </TouchableOpacity>
@@ -303,25 +345,51 @@ export default function MCQScreen({ navigation, route }) {
 
               {/* NAVIGATION */}
               <View style={styles.navigationRow}>
-                <TouchableOpacity style={styles.navButton} disabled>
+                <TouchableOpacity
+                  style={styles.navButton}
+                  disabled={currentQuestion === 0}
+                  onPress={() => setCurrentQuestion((previous) => previous - 1)}
+                >
                   <Ionicons
                     name="arrow-back"
                     size={17 * SCALE}
-                    color={colors.mutedDark}
+                    color={
+                      currentQuestion === 0 ? colors.mutedDark : colors.text
+                    }
                   />
 
                   <Text style={styles.disabledText}>Previous</Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity style={styles.navButton}>
-                  <Text style={styles.navButtonText}>Next</Text>
+                {currentQuestion === questions.length - 1 ? (
+                  <TouchableOpacity
+                    style={styles.examSubmitButton}
+                    onPress={submitAssessment}
+                  >
+                    <Ionicons
+                      name="checkmark-circle-outline"
+                      size={17 * SCALE}
+                      color={colors.background}
+                    />
 
-                  <Ionicons
-                    name="arrow-forward"
-                    size={17 * SCALE}
-                    color={colors.text}
-                  />
-                </TouchableOpacity>
+                    <Text style={styles.examSubmitText}>Submit Assessment</Text>
+                  </TouchableOpacity>
+                ) : (
+                  <TouchableOpacity
+                    style={styles.navButton}
+                    onPress={() =>
+                      setCurrentQuestion((previous) => previous + 1)
+                    }
+                  >
+                    <Text style={styles.navButtonText}>Next</Text>
+
+                    <Ionicons
+                      name="arrow-forward"
+                      size={17 * SCALE}
+                      color={colors.text}
+                    />
+                  </TouchableOpacity>
+                )}
               </View>
             </View>
 
@@ -337,15 +405,16 @@ export default function MCQScreen({ navigation, route }) {
                   {questions.map((_, index) => (
                     <TouchableOpacity
                       key={index}
+                      onPress={() => setCurrentQuestion(index)}
                       style={[
                         styles.paletteButton,
-                        index === 0 && styles.paletteActive,
+                        index === currentQuestion && styles.paletteActive,
                       ]}
                     >
                       <Text
                         style={[
                           styles.paletteText,
-                          index === 0 && styles.paletteActiveText,
+                          index === currentQuestion && styles.paletteActiveText,
                         ]}
                       >
                         {index + 1}
@@ -632,8 +701,13 @@ const styles = StyleSheet.create({
   },
 
   examHeaderPhone: {
+    flexDirection: "column",
     alignItems: "stretch",
     gap: 14 * SCALE,
+  },
+
+  examHeaderPhoneStats: {
+    alignSelf: "stretch",
   },
 
   courseRow: {
@@ -913,6 +987,20 @@ const styles = StyleSheet.create({
     borderColor: colors.text,
 
     marginRight: 10 * SCALE,
+
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  radioSelected: {
+    borderColor: colors.purple,
+  },
+
+  radioDot: {
+    width: 8 * SCALE,
+    height: 8 * SCALE,
+    borderRadius: 4 * SCALE,
+    backgroundColor: colors.purple,
   },
 
   optionText: {
@@ -1093,6 +1181,27 @@ const styles = StyleSheet.create({
     justifyContent: "center",
 
     gap: 7 * SCALE,
+  },
+
+  examSubmitButton: {
+    minHeight: 40 * SCALE,
+    paddingHorizontal: 14 * SCALE,
+
+    borderRadius: 11 * SCALE,
+
+    backgroundColor: colors.purple,
+
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+
+    gap: 7 * SCALE,
+  },
+
+  examSubmitText: {
+    color: colors.background,
+    fontSize: 10 * SCALE,
+    fontWeight: "800",
   },
 
   submitText: {
