@@ -6,13 +6,17 @@ import {
   DrawerContentScrollView,
 } from "@react-navigation/drawer";
 
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
+
 import DashboardScreen from "../screens/DashboardScreen";
 import SectionLeaderBoard from "../screens/SectionLeaderBoard";
 import ProfileScreen from "../screens/ProfileScreen";
 import TechnicalTracksScreen from "../screens/TechnicalTrackScreen";
 import FeedbackScreen from "../screens/FeedbackScreen";
+import LoginScreen from "../screens/LoginScreen";
 
 const Drawer = createDrawerNavigator();
+const Stack = createNativeStackNavigator(); // newly added stack navigator for login screen
 
 function PlaceholderScreen() {
   return (
@@ -143,7 +147,7 @@ function DrawerButton({ title, active, onPress }) {
 /* Navigator                         */
 /* -------------------------------- */
 
-export default function AppNavigator() {
+function MainDrawer() {
   return (
     <Drawer.Navigator
       initialRouteName="Dashboard"
@@ -174,6 +178,20 @@ export default function AppNavigator() {
   );
 }
 
+export default function AppNavigator() {
+  return (
+    <Stack.Navigator
+      initialRouteName="Login"
+      screenOptions={{
+        headerShown: false,
+      }}
+    >
+      <Stack.Screen name="Login" component={LoginScreen} />
+
+      <Stack.Screen name="Dashboard" component={MainDrawer} />
+    </Stack.Navigator>
+  );
+}
 /* -------------------------------- */
 /* Styles                            */
 /* -------------------------------- */
