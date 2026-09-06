@@ -192,7 +192,7 @@ export default function AppNavigator() {
     >
       <Stack.Screen name="Login" component={LoginScreen} />
 
-      <Stack.Screen name="Dashboard" component={MainDrawer} />
+      <Stack.Screen name="MainApp" component={MainDrawer} />
     </Stack.Navigator>
   );
 }

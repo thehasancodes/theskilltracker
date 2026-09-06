@@ -89,7 +89,7 @@ export default function LoginScreen({ navigation }) {
           {
             text: "OK",
             onPress: () => {
-              navigation.replace("Dashboard");
+              navigation.replace("MainApp");
             },
           },
         ]);
