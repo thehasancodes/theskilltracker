@@ -1,12 +1,19 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { Ionicons } from "@expo/vector-icons";
 
-import { profileData } from "../data/profileData";
+import { getProfileData } from "../api/profileApi";
 import { colors as COLORS } from "../constants/colors";
 
 const SCALE = 1.2;
@@ -82,8 +89,47 @@ function StatCard({ icon, label, value, suffix, type = "blue" }) {
 
 export default function ProfileScreen({ navigation }) {
   const [showSemesterTable, setShowSemesterTable] = useState(false);
+  const [profile, setProfile] = useState(null);
+  const [profileError, setProfileError] = useState(false);
 
-  const { student, academic, semesters, placement } = profileData;
+  useEffect(() => {
+    let mounted = true;
+
+    getProfileData()
+      .then((data) => {
+        if (mounted) {
+          setProfile(data);
+        }
+      })
+      .catch(() => {
+        if (mounted) {
+          setProfileError(true);
+        }
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  if (!profile) {
+    return (
+      <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
+        <View style={styles.loadingContainer}>
+          {profileError ? (
+            <Text style={styles.loadingText}>Unable to load profile.</Text>
+          ) : (
+            <>
+              <ActivityIndicator size="small" color={COLORS.purple} />
+              <Text style={styles.loadingText}>Loading profile...</Text>
+            </>
+          )}
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  const { student, academic, semesters, placement } = profile;
 
   // ==========================================================
   // HANDLERS
@@ -630,6 +676,18 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: COLORS.background,
+  },
+
+  loadingContainer: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: COLORS.background,
+  },
+
+  loadingText: {
+    color: COLORS.muted,
+    marginTop: 10,
   },
 
   container: {

@@ -1,4 +1,6 @@
-const LOGIN_URL = process.env.EXPO_PUBLIC_LOGIN_URI;
+const LOGIN_URL =
+  process.env.EXPO_PUBLIC_LOGIN_URI ||
+  "https://api.theskilltracker.in/api/mobile/auth/login";
 
 export class AuthApiError extends Error {
   constructor(message, { status, code } = {}) {

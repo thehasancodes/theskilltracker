@@ -22,7 +22,11 @@ import FeedbackScreen from "../screens/FeedbackScreen";
 import NotificationScreen from "../screens/NotificationScreen";
 import MCQScreen from "../screens/MCQScreen";
 import LoginScreen from "../screens/LoginScreen";
-import { clearAuthSession, getAuthToken } from "../api/authStorage";
+import {
+  clearAuthSession,
+  getAuthToken,
+  getStoredUser,
+} from "../api/authStorage";
 import { colors } from "../constants/colors";
 
 const Drawer = createDrawerNavigator();
@@ -37,7 +41,17 @@ function PlaceholderScreen() {
 }
 
 function CustomDrawerContent(props) {
+  const [storedUser, setStoredUser] = useState(null);
   const currentRoute = props.state.routeNames[props.state.index];
+
+  useEffect(() => {
+    getStoredUser()
+      .then(setStoredUser)
+      .catch(() => setStoredUser(null));
+  }, []);
+
+  const userName = storedUser?.name || "Student";
+  const userInitial = userName.charAt(0).toUpperCase();
 
   const navigate = (screen) => {
     props.navigation.navigate(screen);
@@ -99,11 +113,11 @@ function CustomDrawerContent(props) {
       <View style={styles.bottomSection}>
         <View style={styles.userRow}>
           <View style={styles.avatar}>
-            <Text style={styles.avatarText}>M</Text>
+            <Text style={styles.avatarText}>{userInitial}</Text>
           </View>
 
           <View style={styles.userInfo}>
-            <Text style={styles.userName}>MEHEDI HASAN</Text>
+            <Text style={styles.userName}>{userName}</Text>
 
             <Text style={styles.userRole}>Student</Text>
           </View>

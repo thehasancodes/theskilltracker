@@ -1,18 +1,124 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 
-import { View, Text, StyleSheet, ScrollView, Pressable } from "react-native";
+import {
+  ActivityIndicator,
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  Pressable,
+} from "react-native";
 
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 
 import DashboardCard from "../components/DashboardCard";
 import { colors } from "../constants/colors";
-import { dashboardData } from "../data/dashboardData";
+import { DashboardApiError, getDashboardData } from "../api/dashboardApi";
+import { clearAuthSession, getStoredUser } from "../api/authStorage";
 
 const HEADER_SCALE = 1.2;
 
 export default function DashboardScreen({ navigation }) {
-  const { user, academic, tracks } = dashboardData;
+  const [dashboard, setDashboard] = useState(null);
+  const [user, setUser] = useState(null);
+  const [error, setError] = useState(null);
+  const [retryKey, setRetryKey] = useState(0);
+
+  useEffect(() => {
+    let mounted = true;
+    setError(null);
+
+    Promise.all([getDashboardData(), getStoredUser()])
+      .then(([dashboardData, storedUser]) => {
+        if (mounted) {
+          setDashboard(dashboardData);
+          setUser(storedUser);
+        }
+      })
+      .catch((requestError) => {
+        if (mounted) {
+          setError(
+            requestError instanceof DashboardApiError
+              ? requestError.message
+              : "Unable to load dashboard.",
+          );
+        }
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, [retryKey]);
+
+  if (!dashboard) {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.loadingContainer}>
+          {error ? (
+            <>
+              <Text style={styles.loadingText}>{error}</Text>
+              <Pressable
+                onPress={() => {
+                  setDashboard(null);
+                  setRetryKey((value) => value + 1);
+                }}
+                style={({ pressed }) => [
+                  styles.retryButton,
+                  pressed && styles.pressed,
+                ]}
+              >
+                <Text style={styles.retryButtonText}>Retry</Text>
+              </Pressable>
+              <Pressable
+                onPress={async () => {
+                  await clearAuthSession();
+                  navigation.getParent()?.replace("Login");
+                }}
+                style={({ pressed }) => [
+                  styles.logoutButton,
+                  pressed && styles.pressed,
+                ]}
+              >
+                <Text style={styles.logoutButtonText}>Log out</Text>
+              </Pressable>
+            </>
+          ) : (
+            <>
+              <ActivityIndicator size="small" color={colors.purple} />
+              <Text style={styles.loadingText}>Loading dashboard...</Text>
+            </>
+          )}
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  const userName = user?.name || "STUDENT";
+  const semester = user?.semester ? `Semester ${user.semester}` : "";
+  const degree = user?.department || "";
+  const tracks = [
+    {
+      id: "leetcode",
+      type: "DSA PRACTICE",
+      title: "LeetCode 300",
+      description:
+        "Master fundamental data structures & algorithms through 300 curated industry-standard challenges.",
+      solved: dashboard.totalLeetcodeSolved,
+      total: 300,
+      accent: "primary",
+    },
+    {
+      id: "labs",
+      type: "CURRICULUM CORE",
+      title: "Lab Assignments",
+      description:
+        "Internal assessments, MCQs, and programming labs for your current semester coursework.",
+      solved: dashboard.totalLabsCompleted,
+      total: dashboard.totalLabsCompleted,
+      accent: "cyan",
+    },
+  ];
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -42,7 +148,7 @@ export default function DashboardScreen({ navigation }) {
             <View>
               <Text style={styles.headerTitle}>Student Command Centre</Text>
 
-              <Text style={styles.welcome}>WELCOME {user.name}</Text>
+              <Text style={styles.welcome}>WELCOME {userName}</Text>
             </View>
           </View>
         </View>
@@ -67,7 +173,7 @@ export default function DashboardScreen({ navigation }) {
             <Text style={styles.heroTitle}>MY STUDENT DASHBOARD</Text>
 
             <Text style={styles.heroSubtitle}>
-              {academic.degree} · {academic.semester} {academic.subtitle}
+              {degree} · {semester} Coursework & Practice Track Progress
             </Text>
           </View>
 
@@ -86,13 +192,32 @@ export default function DashboardScreen({ navigation }) {
                   if (track.id === "labs") {
                     navigation.navigate("MCQ", {
                       title: "Lab Assessment",
-                      course: academic.degree,
+                      course: degree,
                       duration: 30 * 60,
                     });
                   }
                 }}
               />
             ))}
+          </View>
+
+          <View style={styles.activityCard}>
+            <Text style={styles.activityLabel}>RECENT ACTIVITY</Text>
+            <Text style={styles.activityTitle}>
+              {dashboard.recentActivity?.title || "No recent activity"}
+            </Text>
+            {dashboard.recentActivity ? (
+              <Text style={styles.activityScore}>
+                Score: {dashboard.recentActivity.score} /{" "}
+                {dashboard.recentActivity.maxScore}
+              </Text>
+            ) : null}
+            <Text style={styles.pendingText}>
+              MCQ accuracy: {dashboard.mcqAccuracy || 0}%
+            </Text>
+            <Text style={styles.pendingText}>
+              {dashboard.pendingTasks?.length || 0} pending tasks
+            </Text>
           </View>
         </ScrollView>
       </View>
@@ -113,6 +238,45 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
+  },
+
+  loadingContainer: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  loadingText: {
+    color: colors.muted,
+    marginTop: 10,
+    textAlign: "center",
+    paddingHorizontal: 24,
+  },
+
+  retryButton: {
+    marginTop: 16,
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+    borderRadius: 8,
+    backgroundColor: colors.purpleDark,
+    borderWidth: 1,
+    borderColor: colors.purple,
+  },
+
+  retryButtonText: {
+    color: colors.purple,
+    fontWeight: "700",
+  },
+
+  logoutButton: {
+    marginTop: 12,
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+  },
+
+  logoutButtonText: {
+    color: colors.muted,
+    fontWeight: "600",
   },
 
   /* Header */
@@ -239,6 +403,40 @@ const styles = StyleSheet.create({
 
   cardsContainer: {
     width: "100%",
+  },
+
+  activityCard: {
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 16,
+    padding: 20,
+  },
+
+  activityLabel: {
+    color: colors.blue,
+    fontSize: 9,
+    fontWeight: "700",
+    letterSpacing: 1,
+  },
+
+  activityTitle: {
+    color: colors.text,
+    fontSize: 15,
+    fontWeight: "600",
+    marginTop: 10,
+  },
+
+  activityScore: {
+    color: colors.green,
+    fontSize: 12,
+    marginTop: 8,
+  },
+
+  pendingText: {
+    color: colors.muted,
+    fontSize: 11,
+    marginTop: 12,
   },
 
   pressed: {
