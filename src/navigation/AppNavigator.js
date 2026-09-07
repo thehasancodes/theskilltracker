@@ -20,7 +20,7 @@ import ProfileScreen from "../screens/ProfileScreen";
 import TechnicalTracksScreen from "../screens/TechnicalTrackScreen";
 import FeedbackScreen from "../screens/FeedbackScreen";
 import NotificationScreen from "../screens/NotificationScreen";
-import MCQScreen from "../screens/MCQScreen";
+import McqApiScreen from "../screens/McqApiScreen";
 import LoginScreen from "../screens/LoginScreen";
 import {
   clearAuthSession,
@@ -194,7 +194,7 @@ function MainDrawer() {
 
       <Drawer.Screen name="TechnicalTracks" component={TechnicalTracksScreen} />
 
-      <Drawer.Screen name="MCQ" component={MCQScreen} />
+      <Drawer.Screen name="MCQ" component={McqApiScreen} />
 
       <Drawer.Screen name="Notifications" component={NotificationScreen} />
 
