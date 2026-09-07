@@ -1,5 +1,7 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+
 import {
+  ActivityIndicator,
   ScrollView,
   StyleSheet,
   Text,
@@ -7,55 +9,18 @@ import {
   Pressable,
   useWindowDimensions,
 } from "react-native";
+
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 
 import { colors } from "../constants/colors";
+import { getSectionLeaderboard } from "../api/sectionleaderboardapi";
 
 const HEADER_SCALE = 1.2;
 
-/* =========================================================
-   MOCK DATA
-   Replace this with API data later
-========================================================= */
-
-const TOP_STUDENTS = [
-  {
-    rank: 1,
-    name: "Merina Sonowal",
-    email: "merinasonowal094@gmail.com",
-    solved: 53,
-    mcq: "0 / 0",
-  },
-  {
-    rank: 2,
-    name: "Bhumika Barman",
-    email: "barmanhbumika2005@gmail.com",
-    solved: 52,
-    mcq: "0 / 0",
-  },
-  {
-    rank: 3,
-    name: "Abhijit Sharma",
-    email: "abhijitsharmaadtu19@gmail.com",
-    solved: 50,
-    mcq: "0 / 0",
-  },
-];
-
-const CURRENT_USER = {
-  rank: 12,
-  name: "Sourav Pratim Kashyap",
-  email: "souravpratim01@gmail.com",
-  solved: 0,
-  mcq: "0 / 0",
-};
-
-const TOTAL_STUDENTS = 13;
-
-/* =========================================================
-   BADGE
-========================================================= */
+// ============================================================
+// BADGE
+// ============================================================
 
 function Badge({ children, variant = "purple" }) {
   return (
@@ -69,9 +34,9 @@ function Badge({ children, variant = "purple" }) {
   );
 }
 
-/* =========================================================
-   RANK MEDAL
-========================================================= */
+// ============================================================
+// RANK BADGE
+// ============================================================
 
 function RankBadge({ rank, current = false }) {
   let icon = null;
@@ -90,8 +55,11 @@ function RankBadge({ rank, current = false }) {
         styles.rankBadge,
 
         rank === 1 && !current && styles.rankOne,
+
         rank === 2 && !current && styles.rankTwo,
+
         rank === 3 && !current && styles.rankThree,
+
         current && styles.rankCurrent,
       ]}
     >
@@ -116,19 +84,25 @@ function RankBadge({ rank, current = false }) {
   );
 }
 
-/* =========================================================
-   LEADERBOARD ROW
-========================================================= */
+// ============================================================
+// LEADERBOARD ROW
+// ============================================================
 
 function LeaderboardRow({ student, currentUser = false }) {
   return (
     <View style={[styles.studentRow, currentUser && styles.currentStudentRow]}>
-      {/* Rank */}
+      {/* ======================================================
+          RANK
+      ====================================================== */}
+
       <View style={styles.rankColumn}>
         <RankBadge rank={student.rank} current={currentUser} />
       </View>
 
-      {/* Student */}
+      {/* ======================================================
+          STUDENT
+      ====================================================== */}
+
       <View style={styles.studentColumn}>
         <View style={styles.nameContainer}>
           <Text
@@ -147,36 +121,24 @@ function LeaderboardRow({ student, currentUser = false }) {
             </View>
           )}
         </View>
-
-        <Text
-          style={styles.studentEmail}
-          numberOfLines={1}
-          ellipsizeMode="tail"
-        >
-          {student.email}
-        </Text>
       </View>
 
-      {/* Problems */}
-      <View style={styles.solvedColumn}>
-        <View style={styles.solvedBadge}>
-          <Text style={styles.solvedNumber}>{student.solved}</Text>
+      {/* ======================================================
+          SCORE
+      ====================================================== */}
+
+      <View style={styles.scoreColumn}>
+        <View style={styles.scoreBadge}>
+          <Text style={styles.scoreNumber}>{student.score}</Text>
         </View>
-      </View>
-
-      {/* MCQ */}
-      <View style={styles.mcqColumn}>
-        <Text style={styles.mcqScore}>{student.mcq}</Text>
-
-        <Text style={styles.mcqLabel}>marks</Text>
       </View>
     </View>
   );
 }
 
-/* =========================================================
-   MAIN SCREEN
-========================================================= */
+// ============================================================
+// MAIN SCREEN
+// ============================================================
 
 export default function SectionLeaderBoard({ navigation }) {
   const { width } = useWindowDimensions();
@@ -186,14 +148,109 @@ export default function SectionLeaderBoard({ navigation }) {
 
   const horizontalPadding = isSmall ? 14 : isPhone ? 16 : 32;
 
-  const studentsAhead = CURRENT_USER.rank - 1;
+  // ==========================================================
+  // STATE
+  // ==========================================================
+
+  const [leaderboard, setLeaderboard] = useState(null);
+
+  const [loading, setLoading] = useState(true);
+
+  const [error, setError] = useState(null);
+
+  // ==========================================================
+  // LOAD SECTION LEADERBOARD
+  // ==========================================================
+
+  useEffect(() => {
+    loadLeaderboard();
+  }, []);
+
+  const loadLeaderboard = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const data = await getSectionLeaderboard();
+
+      setLeaderboard(data);
+    } catch (error) {
+      console.log("Section leaderboard error:", error);
+
+      setError(error.message || "Unable to load leaderboard");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ==========================================================
+  // LOADING STATE
+  // ==========================================================
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={colors.purple} />
+
+          <Text style={styles.loadingText}>Loading leaderboard...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // ==========================================================
+  // ERROR STATE
+  // ==========================================================
+
+  if (error) {
+    return (
+      <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
+        <View style={styles.errorContainer}>
+          <Ionicons
+            name="alert-circle-outline"
+            size={36}
+            color={colors.purple}
+          />
+
+          <Text style={styles.errorTitle}>Unable to load leaderboard</Text>
+
+          <Text style={styles.errorText}>{error}</Text>
+
+          <Pressable
+            onPress={loadLeaderboard}
+            style={({ pressed }) => [
+              styles.retryButton,
+              pressed && styles.pressed,
+            ]}
+          >
+            <Ionicons name="refresh-outline" size={16} color={colors.white} />
+
+            <Text style={styles.retryText}>RETRY</Text>
+          </Pressable>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // ==========================================================
+  // API DATA
+  // ==========================================================
+
+  const topStudents = leaderboard?.topStudents || [];
+
+  const currentUser = leaderboard?.myRank || null;
+
+  const studentsAhead = currentUser?.studentsAhead || 0;
+
+  const champion = topStudents.length > 0 ? topStudents[0] : null;
 
   return (
     <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
       <View style={styles.container}>
-        {/* =================================================
+        {/* ====================================================
             HEADER
-        ================================================= */}
+        ==================================================== */}
 
         <View style={styles.header}>
           <View style={styles.headerLeft}>
@@ -204,7 +261,11 @@ export default function SectionLeaderBoard({ navigation }) {
                 pressed && styles.pressed,
               ]}
             >
-              <Ionicons name="menu" size={23} color={colors.text} />
+              <Ionicons
+                name="menu"
+                size={22 * HEADER_SCALE}
+                color={colors.text}
+              />
             </Pressable>
 
             <View>
@@ -213,16 +274,17 @@ export default function SectionLeaderBoard({ navigation }) {
               <Text style={styles.headerWelcome}>
                 WELCOME{" "}
                 <Text style={styles.headerName}>
-                  {CURRENT_USER.name.toUpperCase()}
+                  {currentUser?.name?.replace(" (You)", "").toUpperCase() ||
+                    "STUDENT"}
                 </Text>
               </Text>
             </View>
           </View>
         </View>
 
-        {/* =================================================
-            CONTENT
-        ================================================= */}
+        {/* ====================================================
+            PAGE CONTENT
+        ==================================================== */}
 
         <ScrollView
           style={styles.scrollView}
@@ -234,9 +296,9 @@ export default function SectionLeaderBoard({ navigation }) {
           ]}
           showsVerticalScrollIndicator={false}
         >
-          {/* =================================================
+          {/* ==================================================
               HERO
-          ================================================= */}
+          ================================================== */}
 
           <View style={styles.heroCard}>
             <View style={styles.heroBadges}>
@@ -248,14 +310,14 @@ export default function SectionLeaderBoard({ navigation }) {
             <Text style={styles.heroTitle}>MY SECTION LEADERBOARD</Text>
 
             <Text style={styles.heroDescription}>
-              Your real-time standings among classmates based on problems solved
-              and lab MCQ scores.
+              Your real-time standings among classmates based on your
+              leaderboard score.
             </Text>
           </View>
 
-          {/* =================================================
+          {/* ==================================================
               QUICK STATS
-          ================================================= */}
+          ================================================== */}
 
           <View
             style={[
@@ -263,7 +325,9 @@ export default function SectionLeaderBoard({ navigation }) {
               isPhone && styles.statsContainerMobile,
             ]}
           >
-            {/* Champion */}
+            {/* =================================================
+                CHAMPION
+            ================================================= */}
 
             <View style={styles.statCard}>
               <View style={styles.statHeader}>
@@ -279,17 +343,17 @@ export default function SectionLeaderBoard({ navigation }) {
               </View>
 
               <Text style={styles.championName} numberOfLines={1}>
-                {TOP_STUDENTS[0].name}
+                {champion?.name || "No data"}
               </Text>
 
               <Text style={styles.championStats}>
-                {TOP_STUDENTS[0].solved} problems
-                {"  ·  "}
-                {TOP_STUDENTS[0].mcq} marks
+                {champion?.score ?? 0} score
               </Text>
             </View>
 
-            {/* Your Rank */}
+            {/* =================================================
+                YOUR RANK
+            ================================================= */}
 
             <View style={styles.statCard}>
               <View style={styles.statHeader}>
@@ -305,9 +369,7 @@ export default function SectionLeaderBoard({ navigation }) {
               </View>
 
               <View style={styles.rankInfo}>
-                <Text style={styles.bigRank}>#{CURRENT_USER.rank}</Text>
-
-                <Text style={styles.rankOf}>of {TOTAL_STUDENTS} students</Text>
+                <Text style={styles.bigRank}>#{currentUser?.rank ?? "-"}</Text>
               </View>
 
               <Text style={styles.rankAhead}>
@@ -316,17 +378,19 @@ export default function SectionLeaderBoard({ navigation }) {
             </View>
           </View>
 
-          {/* =================================================
+          {/* ==================================================
               LEADERBOARD
-          ================================================= */}
+          ================================================== */}
 
           <View style={styles.leaderboardCard}>
-            {/* Card Header */}
+            {/* =================================================
+                CARD HEADER
+            ================================================= */}
 
             <View style={styles.leaderboardHeader}>
               <View>
                 <Text style={styles.leaderboardTitle}>
-                  TOP 3 IN YOUR SECTION
+                  TOP STUDENTS IN YOUR SECTION
                 </Text>
 
                 <Text style={styles.leaderboardSubtitle}>
@@ -341,54 +405,70 @@ export default function SectionLeaderBoard({ navigation }) {
               </View>
             </View>
 
-            {/* Table */}
+            {/* =================================================
+                SCROLLABLE LEADERBOARD
+            ================================================= */}
 
-            <View style={styles.table}>
-              {/* Header */}
+            <ScrollView
+              style={styles.leaderboardScroll}
+              nestedScrollEnabled={true}
+              showsVerticalScrollIndicator={true}
+            >
+              <View style={styles.table}>
+                {/* =============================================
+                    TABLE HEADER
+                ============================================= */}
 
-              <View style={styles.tableHeader}>
-                <View style={styles.rankColumn}>
-                  <Text style={styles.tableHeaderText}>RANK</Text>
+                <View style={styles.tableHeader}>
+                  <View style={styles.rankColumn}>
+                    <Text style={styles.tableHeaderText}>RANK</Text>
+                  </View>
+
+                  <View style={styles.studentColumn}>
+                    <Text style={styles.tableHeaderText}>STUDENT</Text>
+                  </View>
+
+                  <View style={styles.scoreColumn}>
+                    <Text style={styles.tableHeaderText}>SCORE</Text>
+                  </View>
                 </View>
 
-                <View style={styles.studentColumn}>
-                  <Text style={styles.tableHeaderText}>STUDENT</Text>
-                </View>
+                {/* =============================================
+                    TOP STUDENTS
+                ============================================= */}
 
-                <View style={styles.solvedColumn}>
-                  <Text style={styles.tableHeaderText}>SOLVED</Text>
-                </View>
+                {topStudents.map((student) => (
+                  <LeaderboardRow key={student.id} student={student} />
+                ))}
 
-                <View style={styles.mcqColumn}>
-                  <Text style={styles.tableHeaderText}>MCQ</Text>
-                </View>
+                {/* =============================================
+                    SEPARATOR
+                ============================================= */}
+
+                {currentUser && (
+                  <View style={styles.separator}>
+                    <View style={styles.separatorLine} />
+
+                    <Text style={styles.separatorText}>YOUR POSITION</Text>
+
+                    <View style={styles.separatorLine} />
+                  </View>
+                )}
+
+                {/* =============================================
+                    CURRENT USER
+                ============================================= */}
+
+                {currentUser && (
+                  <LeaderboardRow student={currentUser} currentUser={true} />
+                )}
               </View>
-
-              {/* Students */}
-
-              {TOP_STUDENTS.map((student) => (
-                <LeaderboardRow key={student.rank} student={student} />
-              ))}
-
-              {/* Separator */}
-
-              <View style={styles.separator}>
-                <View style={styles.separatorLine} />
-
-                <Text style={styles.separatorText}>YOUR POSITION</Text>
-
-                <View style={styles.separatorLine} />
-              </View>
-
-              {/* Current User */}
-
-              <LeaderboardRow student={CURRENT_USER} currentUser />
-            </View>
+            </ScrollView>
           </View>
 
-          {/* =================================================
+          {/* ==================================================
               FOOTER INFO
-          ================================================= */}
+          ================================================== */}
 
           <View style={styles.infoCard}>
             <Ionicons
@@ -398,8 +478,8 @@ export default function SectionLeaderBoard({ navigation }) {
             />
 
             <Text style={styles.infoText}>
-              Rankings are calculated using your solved problems and lab MCQ
-              performance.
+              Rankings are calculated using the score provided by the Section
+              Leaderboard service.
             </Text>
           </View>
 
@@ -410,14 +490,14 @@ export default function SectionLeaderBoard({ navigation }) {
   );
 }
 
-/* =========================================================
-   STYLES
-========================================================= */
+// ============================================================
+// STYLES
+// ============================================================
 
 const styles = StyleSheet.create({
-  /* -------------------------------------------------------
-     ROOT
-  ------------------------------------------------------- */
+  // ==========================================================
+  // ROOT
+  // ==========================================================
 
   safeArea: {
     flex: 1,
@@ -438,9 +518,9 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
 
-  /* -------------------------------------------------------
-     HEADER
-  ------------------------------------------------------- */
+  // ==========================================================
+  // HEADER
+  // ==========================================================
 
   header: {
     minHeight: 70 * HEADER_SCALE,
@@ -496,9 +576,9 @@ const styles = StyleSheet.create({
     color: colors.text,
   },
 
-  /* -------------------------------------------------------
-     HERO
-  ------------------------------------------------------- */
+  // ==========================================================
+  // HERO
+  // ==========================================================
 
   heroCard: {
     backgroundColor: colors.card,
@@ -543,6 +623,7 @@ const styles = StyleSheet.create({
 
   badgeCyan: {
     backgroundColor: colors.blueDark,
+
     borderColor: colors.cyanDark,
   },
 
@@ -584,9 +665,9 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
 
-  /* -------------------------------------------------------
-     STATS
-  ------------------------------------------------------- */
+  // ==========================================================
+  // QUICK STATS
+  // ==========================================================
 
   statsContainer: {
     flexDirection: "row",
@@ -695,25 +776,17 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
 
-  rankOf: {
-    color: colors.mutedDark,
-
-    fontSize: 10,
-
-    marginLeft: 5,
-  },
-
   rankAhead: {
     color: colors.muted,
 
     fontSize: 10,
 
-    marginTop: 2,
+    marginTop: 7,
   },
 
-  /* -------------------------------------------------------
-     LEADERBOARD CARD
-  ------------------------------------------------------- */
+  // ==========================================================
+  // LEADERBOARD CARD
+  // ==========================================================
 
   leaderboardCard: {
     marginTop: 16,
@@ -786,9 +859,17 @@ const styles = StyleSheet.create({
     letterSpacing: 0.8,
   },
 
-  /* -------------------------------------------------------
-     TABLE
-  ------------------------------------------------------- */
+  // ==========================================================
+  // LEADERBOARD SCROLL
+  // ==========================================================
+
+  leaderboardScroll: {
+    maxHeight: 360,
+  },
+
+  // ==========================================================
+  // TABLE
+  // ==========================================================
 
   table: {
     overflow: "hidden",
@@ -820,35 +901,31 @@ const styles = StyleSheet.create({
     letterSpacing: 0.7,
   },
 
-  /* -------------------------------------------------------
-     COLUMNS
-  ------------------------------------------------------- */
+  // ==========================================================
+  // COLUMNS
+  // ==========================================================
 
   rankColumn: {
-    width: "14%",
+    width: "16%",
 
     paddingLeft: 10,
   },
 
   studentColumn: {
-    width: "44%",
+    flex: 1,
 
     paddingRight: 6,
   },
 
-  solvedColumn: {
-    width: "19%",
-  },
-
-  mcqColumn: {
-    flex: 1,
+  scoreColumn: {
+    width: "21%",
 
     paddingRight: 10,
   },
 
-  /* -------------------------------------------------------
-     STUDENT ROW
-  ------------------------------------------------------- */
+  // ==========================================================
+  // STUDENT ROW
+  // ==========================================================
 
   studentRow: {
     minHeight: 70,
@@ -868,9 +945,9 @@ const styles = StyleSheet.create({
     borderBottomWidth: 0,
   },
 
-  /* -------------------------------------------------------
-     RANK
-  ------------------------------------------------------- */
+  // ==========================================================
+  // RANK
+  // ==========================================================
 
   rankBadge: {
     width: 27,
@@ -893,21 +970,25 @@ const styles = StyleSheet.create({
 
   rankOne: {
     backgroundColor: colors.yellowDark,
+
     borderColor: colors.yellow,
   },
 
   rankTwo: {
     backgroundColor: colors.surface3,
+
     borderColor: colors.borderLight,
   },
 
   rankThree: {
     backgroundColor: colors.yellowDark,
+
     borderColor: colors.yellow,
   },
 
   rankCurrent: {
     backgroundColor: colors.purpleDark,
+
     borderColor: colors.purpleBorder,
   },
 
@@ -922,9 +1003,9 @@ const styles = StyleSheet.create({
     color: colors.purple,
   },
 
-  /* -------------------------------------------------------
-     STUDENT
-  ------------------------------------------------------- */
+  // ==========================================================
+  // STUDENT
+  // ==========================================================
 
   nameContainer: {
     flexDirection: "row",
@@ -946,16 +1027,6 @@ const styles = StyleSheet.create({
     color: colors.purple,
   },
 
-  studentEmail: {
-    color: colors.muted,
-
-    fontSize: 7.5,
-
-    marginTop: 4,
-
-    flexShrink: 1,
-  },
-
   youBadge: {
     paddingHorizontal: 5,
     paddingVertical: 3,
@@ -974,14 +1045,14 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
 
-  /* -------------------------------------------------------
-     SOLVED
-  ------------------------------------------------------- */
+  // ==========================================================
+  // SCORE
+  // ==========================================================
 
-  solvedBadge: {
+  scoreBadge: {
     alignSelf: "flex-start",
 
-    minWidth: 30,
+    minWidth: 36,
 
     paddingHorizontal: 7,
     paddingVertical: 5,
@@ -996,35 +1067,16 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
 
-  solvedNumber: {
+  scoreNumber: {
     color: colors.text,
 
     fontSize: 9,
     fontWeight: "800",
   },
 
-  /* -------------------------------------------------------
-     MCQ
-  ------------------------------------------------------- */
-
-  mcqScore: {
-    color: colors.text,
-
-    fontSize: 9,
-    fontWeight: "800",
-  },
-
-  mcqLabel: {
-    color: colors.mutedDark,
-
-    fontSize: 7,
-
-    marginTop: 2,
-  },
-
-  /* -------------------------------------------------------
-     SEPARATOR
-  ------------------------------------------------------- */
+  // ==========================================================
+  // SEPARATOR
+  // ==========================================================
 
   separator: {
     minHeight: 35,
@@ -1056,9 +1108,9 @@ const styles = StyleSheet.create({
     letterSpacing: 0.8,
   },
 
-  /* -------------------------------------------------------
-     INFO
-  ------------------------------------------------------- */
+  // ==========================================================
+  // INFO
+  // ==========================================================
 
   infoCard: {
     marginTop: 12,
@@ -1088,11 +1140,102 @@ const styles = StyleSheet.create({
     marginLeft: 9,
   },
 
-  bottomSpace: {
-    height: 20,
+  // ==========================================================
+  // LOADING
+  // ==========================================================
+
+  loadingContainer: {
+    flex: 1,
+
+    alignItems: "center",
+    justifyContent: "center",
+
+    paddingHorizontal: 30,
   },
+
+  loadingText: {
+    color: colors.muted,
+
+    fontSize: 11,
+
+    marginTop: 12,
+  },
+
+  // ==========================================================
+  // ERROR
+  // ==========================================================
+
+  errorContainer: {
+    flex: 1,
+
+    alignItems: "center",
+    justifyContent: "center",
+
+    paddingHorizontal: 30,
+  },
+
+  errorTitle: {
+    color: colors.text,
+
+    fontSize: 15,
+    fontWeight: "700",
+
+    marginTop: 12,
+
+    textAlign: "center",
+  },
+
+  errorText: {
+    color: colors.muted,
+
+    fontSize: 10,
+
+    marginTop: 6,
+
+    textAlign: "center",
+
+    lineHeight: 16,
+  },
+
+  retryButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+
+    marginTop: 18,
+
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+
+    borderRadius: 9,
+
+    backgroundColor: colors.primary,
+  },
+
+  retryText: {
+    color: colors.white,
+
+    fontSize: 9,
+    fontWeight: "800",
+
+    marginLeft: 7,
+
+    letterSpacing: 0.5,
+  },
+
+  // ==========================================================
+  // PRESS STATE
+  // ==========================================================
 
   pressed: {
     opacity: 0.65,
+  },
+
+  // ==========================================================
+  // BOTTOM SPACE
+  // ==========================================================
+
+  bottomSpace: {
+    height: 20,
   },
 });
