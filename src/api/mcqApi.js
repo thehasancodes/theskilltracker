@@ -61,6 +61,7 @@ async function request(path, options = {}) {
       status: response.status,
       ok: response.ok,
       success: result.success,
+      error: result.error,
       topLevelKeys: Object.keys(result),
       dataType: Array.isArray(result.data) ? "array" : typeof result.data,
       dataKeys:
@@ -73,7 +74,13 @@ async function request(path, options = {}) {
   }
 
   if (!response.ok || result.success === false) {
-    throw new McqApiError(result.message || "MCQ request failed.", {
+    const serverError = result.error;
+    const message =
+      result.message ||
+      (typeof serverError === "string" ? serverError : serverError?.message) ||
+      "MCQ request failed.";
+
+    throw new McqApiError(message, {
       status: response.status,
       code: result.code,
     });
@@ -96,6 +103,6 @@ export function submitMcqAnswers(assignmentId, answers) {
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify(answers),
+    body: JSON.stringify({ answers }),
   });
 }

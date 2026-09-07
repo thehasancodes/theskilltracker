@@ -190,11 +190,7 @@ export default function DashboardScreen({ navigation }) {
                   }
 
                   if (track.id === "labs") {
-                    navigation.navigate("MCQ", {
-                      title: "Lab Assessment",
-                      course: degree,
-                      duration: 30 * 60,
-                    });
+                    navigation.navigate("MCQ");
                   }
                 }}
               />

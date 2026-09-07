@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Pressable,
@@ -71,6 +71,45 @@ function getAssignmentId(assignment) {
   return assignment?.id || assignment?._id || assignment?.assignmentId;
 }
 
+function isCompleted(assignment) {
+  return (
+    String(assignment?.status || "").toUpperCase() === "COMPLETED" ||
+    Boolean(assignment?.mySubmission) ||
+    assignment?.submitted === true
+  );
+}
+
+function isPastDue(assignment) {
+  if (assignment?.isPastDue === true) return true;
+  if (!assignment?.dueDate) return false;
+
+  const dueTime = Date.parse(assignment.dueDate);
+  return Number.isFinite(dueTime) && dueTime < Date.now();
+}
+
+function getAssignmentState(assignment) {
+  if (isCompleted(assignment)) return "completed";
+  if (isPastDue(assignment)) return "overdue";
+  return "available";
+}
+
+function sortAssignments(items) {
+  const stateRank = { available: 0, completed: 1, overdue: 2 };
+
+  return [...items].sort((first, second) => {
+    const firstState = getAssignmentState(first);
+    const secondState = getAssignmentState(second);
+    const rankDifference = stateRank[firstState] - stateRank[secondState];
+
+    if (rankDifference) return rankDifference;
+
+    const firstDue = Date.parse(first.dueDate || "") || Number.MAX_SAFE_INTEGER;
+    const secondDue =
+      Date.parse(second.dueDate || "") || Number.MAX_SAFE_INTEGER;
+    return firstDue - secondDue;
+  });
+}
+
 function formatDate(value) {
   if (!value) return "No due date";
   const date = new Date(value);
@@ -123,10 +162,22 @@ export default function McqApiScreen({ navigation, route }) {
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
+  const autoSubmitInProgress = useRef(false);
 
   useEffect(() => {
     loadAssignments();
   }, []);
+
+  useEffect(() => {
+    const unsubscribe = navigation.addListener("beforeRemove", (event) => {
+      if (!assignment || result || autoSubmitInProgress.current) return;
+
+      event.preventDefault();
+      autoSubmitAndLeave(event.data.action);
+    });
+
+    return unsubscribe;
+  }, [assignment, result, answers, questions, busy]);
 
   async function loadAssignments() {
     setLoading(true);
@@ -134,7 +185,7 @@ export default function McqApiScreen({ navigation, route }) {
 
     try {
       const data = await getMcqAssignments();
-      const items = getAssignments(data);
+      const items = sortAssignments(getAssignments(data)).slice(0, 10);
       setAssignments(items);
 
       if (initialAssignmentId) {
@@ -156,6 +207,11 @@ export default function McqApiScreen({ navigation, route }) {
     const id = getAssignmentId(item);
     if (!id) return;
 
+    if (getAssignmentState(item) === "overdue") {
+      setError("This assignment is past its due date and cannot be opened.");
+      return;
+    }
+
     setBusy(true);
     setError(null);
     setResult(null);
@@ -170,10 +226,31 @@ export default function McqApiScreen({ navigation, route }) {
         );
       }
 
-      setAssignment(item);
+      const detailedAssignment = {
+        ...data.assignment,
+        ...item,
+      };
+
+      if (getAssignmentState(detailedAssignment) === "overdue") {
+        throw new McqApiError(
+          "This assignment is past its due date and cannot be opened.",
+        );
+      }
+
+      if (isCompleted(detailedAssignment) && !data.mySubmission) {
+        throw new McqApiError(
+          "This assignment has already been submitted and cannot be retaken.",
+        );
+      }
+
+      setAssignment(detailedAssignment);
       setQuestions(questionItems);
       setAnswers({});
       setCurrentIndex(0);
+
+      if (data.mySubmission) {
+        setResult({ submission: data.mySubmission });
+      }
     } catch (requestError) {
       setError(getErrorMessage(requestError));
     } finally {
@@ -193,9 +270,21 @@ export default function McqApiScreen({ navigation, route }) {
     const assignmentId = getAssignmentId(assignment);
     if (!assignmentId) return;
 
-    const payload = questions.map((question) => ({
-      questionId: question.id,
-      selectedOption: answers[question.id] ?? null,
+    if (isPastDue(assignment)) {
+      setError("This assignment is past its due date and cannot be submitted.");
+      return;
+    }
+
+    if (isCompleted(assignment)) {
+      setError(
+        "This assignment has already been submitted and cannot be retaken.",
+      );
+      return;
+    }
+
+    const payload = questions.map((question, questionIndex) => ({
+      questionIndex,
+      selectedoptionIndex: answers[question.id] ?? -1,
     }));
 
     setBusy(true);
@@ -203,6 +292,27 @@ export default function McqApiScreen({ navigation, route }) {
 
     try {
       const submission = await submitMcqAnswers(assignmentId, payload);
+      const submittedResult = submission.submission || submission;
+
+      setAssignment((current) => ({
+        ...current,
+        status: "COMPLETED",
+        mySubmission: submittedResult,
+      }));
+      setAssignments((current) =>
+        sortAssignments(
+          current.map((item) =>
+            getAssignmentId(item) === assignmentId
+              ? {
+                  ...item,
+                  status: "COMPLETED",
+                  earnedScore: submittedResult.score ?? item.earnedScore,
+                  mySubmission: submittedResult,
+                }
+              : item,
+          ),
+        ),
+      );
       setResult(submission);
     } catch (requestError) {
       setError(getErrorMessage(requestError));
@@ -211,11 +321,35 @@ export default function McqApiScreen({ navigation, route }) {
     }
   }
 
+  async function autoSubmitAndLeave(navigationAction) {
+    if (autoSubmitInProgress.current) return;
+
+    autoSubmitInProgress.current = true;
+    setBusy(true);
+    setError(null);
+
+    const assignmentId = getAssignmentId(assignment);
+    const payload = questions.map((question, questionIndex) => ({
+      questionIndex,
+      selectedoptionIndex: answers[question.id] ?? -1,
+    }));
+
+    try {
+      await submitMcqAnswers(assignmentId, payload);
+      navigation.dispatch(navigationAction);
+    } catch (requestError) {
+      autoSubmitInProgress.current = false;
+      setBusy(false);
+      setError(getErrorMessage(requestError));
+    }
+  }
+
   if (loading) return <LoadingState label="Loading assignments..." />;
 
   if (result) {
-    const score = result.score ?? result.totalScore ?? result.data?.score;
-    const total = result.maxScore ?? result.totalMarks ?? result.data?.maxScore;
+    const submission = result.submission || result.data?.submission || result;
+    const score = submission.score ?? submission.totalScore;
+    const total = submission.maxScore ?? submission.totalMarks;
 
     return (
       <ScreenShell navigation={navigation}>
@@ -231,7 +365,14 @@ export default function McqApiScreen({ navigation, route }) {
           ) : null}
           <Button
             label="Back to assignments"
-            onPress={() => setAssignment(null)}
+            onPress={() => {
+              setResult(null);
+              setAssignment(null);
+              setQuestions([]);
+              setAnswers({});
+              setCurrentIndex(0);
+              setError(null);
+            }}
           />
         </View>
       </ScreenShell>
@@ -249,12 +390,17 @@ export default function McqApiScreen({ navigation, route }) {
         ) : null}
         {assignments.map((item, index) => {
           const id = getAssignmentId(item) || String(index);
+          const state = getAssignmentState(item);
+          const isOverdue = state === "overdue";
+          const isAlreadySubmitted = state === "completed";
           return (
             <Pressable
               key={id}
               onPress={() => openAssignment(item)}
+              disabled={isOverdue}
               style={({ pressed }) => [
                 styles.assignmentCard,
+                isOverdue && styles.assignmentCardDisabled,
                 pressed && styles.pressed,
               ]}
             >
@@ -262,7 +408,7 @@ export default function McqApiScreen({ navigation, route }) {
                 <Ionicons
                   name="document-text-outline"
                   size={22}
-                  color={colors.purple}
+                  color={isOverdue ? colors.mutedDark : colors.purple}
                 />
               </View>
               <View style={styles.cardBody}>
@@ -270,11 +416,33 @@ export default function McqApiScreen({ navigation, route }) {
                   {item.title || item.name || "MCQ Test"}
                 </Text>
                 <Text style={styles.assignmentMeta}>
-                  {item.type || "Assessment"} · Due{" "}
+                  {isAlreadySubmitted
+                    ? `Submitted: ${item.earnedScore ?? 0} / ${item.maxScore ?? "-"}`
+                    : isOverdue
+                      ? "Past due · Access blocked"
+                      : `${item.type || "Assessment"} · Due`}{" "}
                   {formatDate(item.dueDate || item.dueAt)}
                 </Text>
               </View>
-              <Ionicons name="chevron-forward" size={20} color={colors.muted} />
+              {isOverdue ? (
+                <Ionicons
+                  name="lock-closed"
+                  size={18}
+                  color={colors.mutedDark}
+                />
+              ) : isAlreadySubmitted ? (
+                <Ionicons
+                  name="checkmark-circle"
+                  size={20}
+                  color={colors.green}
+                />
+              ) : (
+                <Ionicons
+                  name="chevron-forward"
+                  size={20}
+                  color={colors.muted}
+                />
+              )}
             </Pressable>
           );
         })}
@@ -289,7 +457,7 @@ export default function McqApiScreen({ navigation, route }) {
     : 0;
 
   return (
-    <ScreenShell navigation={navigation}>
+    <ScreenShell navigation={navigation} onBack={() => navigation.goBack()}>
       <View style={styles.examHeader}>
         <View style={styles.headerText}>
           <Text style={styles.pageTitle}>
@@ -370,13 +538,13 @@ export default function McqApiScreen({ navigation, route }) {
   );
 }
 
-function ScreenShell({ navigation, children }) {
+function ScreenShell({ navigation, children, onBack }) {
   return (
     <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
       <View style={styles.container}>
         <View style={styles.header}>
           <Pressable
-            onPress={() => navigation.goBack()}
+            onPress={onBack || (() => navigation.goBack())}
             style={styles.backButton}
           >
             <Ionicons name="arrow-back" size={22} color={colors.text} />
@@ -458,6 +626,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: 14,
+  },
+  assignmentCardDisabled: {
+    opacity: 0.55,
   },
   cardIcon: {
     width: 44,
