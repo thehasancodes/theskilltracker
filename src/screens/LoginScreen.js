@@ -253,7 +253,7 @@ export default function LoginScreen({ navigation }) {
           {/* ================================= */}
 
           <Text style={styles.footer}>
-            DEVELOPED BY: MEHEDI, SOURAV, JUNEVENSON
+            DEVELOPED & DESIGNED BY: MEHEDI, SOURAV, JUNEVENSON
           </Text>
         </ScrollView>
       </KeyboardAvoidingView>
