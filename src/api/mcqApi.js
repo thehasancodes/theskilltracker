@@ -1,8 +1,6 @@
 import { getAuthToken } from "./authStorage";
 
-const MCQ_BASE_URL =
-  process.env.EXPO_PUBLIC_MCQ_BASE_URI ||
-  "https://364slz4c-5000.inc1.devtunnels.ms/api/mobile/v1";
+const MCQ_BASE_URL = process.env.EXPO_PUBLIC_MCQ_BASE_URI;
 
 export class McqApiError extends Error {
   constructor(message, { status, code } = {}) {
