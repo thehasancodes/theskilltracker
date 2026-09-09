@@ -32,14 +32,6 @@ import { colors } from "../constants/colors";
 const Drawer = createDrawerNavigator();
 const Stack = createNativeStackNavigator(); // newly added stack navigator for login screen
 
-function PlaceholderScreen() {
-  return (
-    <View style={styles.placeholder}>
-      <Text style={styles.placeholderText}>Coming Soon</Text>
-    </View>
-  );
-}
-
 function CustomDrawerContent(props) {
   const [storedUser, setStoredUser] = useState(null);
   const currentRoute = props.state.routeNames[props.state.index];
@@ -377,17 +369,5 @@ const styles = StyleSheet.create({
 
   pressed: {
     opacity: 0.65,
-  },
-
-  placeholder: {
-    flex: 1,
-    backgroundColor: "#0a0a0a",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  placeholderText: {
-    color: "#e2e8f0",
-    fontSize: 18,
   },
 });

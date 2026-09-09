@@ -1,6 +1,7 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
+  BackHandler,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -9,6 +10,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
+import { useFocusEffect } from "@react-navigation/native";
 
 import {
   getMcqAssignments,
@@ -151,6 +153,10 @@ function getErrorMessage(error) {
     : "Unable to load the MCQ data.";
 }
 
+function getSubmission(value) {
+  return value?.submission || value?.data?.submission || value?.data || value;
+}
+
 export default function McqApiScreen({ navigation, route }) {
   const initialAssignmentId = route?.params?.assignmentId || null;
   const [assignments, setAssignments] = useState([]);
@@ -164,13 +170,30 @@ export default function McqApiScreen({ navigation, route }) {
   const [error, setError] = useState(null);
   const autoSubmitInProgress = useRef(false);
 
-  useEffect(() => {
-    loadAssignments();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      loadAssignments();
+
+      return () => {
+        setResult(null);
+        setAssignment(null);
+        setQuestions([]);
+        setAnswers({});
+        setCurrentIndex(0);
+        setError(null);
+      };
+    }, [initialAssignmentId]),
+  );
 
   useEffect(() => {
     const unsubscribe = navigation.addListener("beforeRemove", (event) => {
-      if (!assignment || result || autoSubmitInProgress.current) return;
+      if (result) {
+        event.preventDefault();
+        backToAssignments();
+        return;
+      }
+
+      if (!assignment || autoSubmitInProgress.current) return;
 
       event.preventDefault();
       autoSubmitAndLeave(event.data.action);
@@ -178,6 +201,20 @@ export default function McqApiScreen({ navigation, route }) {
 
     return unsubscribe;
   }, [assignment, result, answers, questions, busy]);
+
+  useEffect(() => {
+    const subscription = BackHandler.addEventListener(
+      "hardwareBackPress",
+      () => {
+        if (!result) return false;
+
+        backToAssignments();
+        return true;
+      },
+    );
+
+    return () => subscription.remove();
+  }, [result]);
 
   async function loadAssignments() {
     setLoading(true);
@@ -249,7 +286,7 @@ export default function McqApiScreen({ navigation, route }) {
       setCurrentIndex(0);
 
       if (data.mySubmission) {
-        setResult({ submission: data.mySubmission });
+        setResult({ submission: getSubmission(data.mySubmission) });
       }
     } catch (requestError) {
       setError(getErrorMessage(requestError));
@@ -292,7 +329,15 @@ export default function McqApiScreen({ navigation, route }) {
 
     try {
       const submission = await submitMcqAnswers(assignmentId, payload);
-      const submittedResult = submission.submission || submission;
+      const submittedResult = getSubmission(submission);
+
+      if (__DEV__) {
+        console.log("[mcq] Submission score", {
+          score: submittedResult?.score,
+          maxScore: submittedResult?.maxScore,
+          answerCount: submittedResult?.answers?.length,
+        });
+      }
 
       setAssignment((current) => ({
         ...current,
@@ -344,15 +389,24 @@ export default function McqApiScreen({ navigation, route }) {
     }
   }
 
+  function backToAssignments() {
+    setResult(null);
+    setAssignment(null);
+    setQuestions([]);
+    setAnswers({});
+    setCurrentIndex(0);
+    setError(null);
+  }
+
   if (loading) return <LoadingState label="Loading assignments..." />;
 
   if (result) {
-    const submission = result.submission || result.data?.submission || result;
+    const submission = getSubmission(result);
     const score = submission.score ?? submission.totalScore;
     const total = submission.maxScore ?? submission.totalMarks;
 
     return (
-      <ScreenShell navigation={navigation}>
+      <ScreenShell navigation={navigation} onBack={backToAssignments}>
         <View style={styles.resultCard}>
           <Ionicons name="checkmark-circle" size={58} color={colors.green} />
           <Text style={styles.resultTitle}>Assessment submitted</Text>
@@ -363,17 +417,7 @@ export default function McqApiScreen({ navigation, route }) {
               {total !== undefined ? ` / ${total}` : ""}
             </Text>
           ) : null}
-          <Button
-            label="Back to assignments"
-            onPress={() => {
-              setResult(null);
-              setAssignment(null);
-              setQuestions([]);
-              setAnswers({});
-              setCurrentIndex(0);
-              setError(null);
-            }}
-          />
+          <Button label="Back to assignments" onPress={backToAssignments} />
         </View>
       </ScreenShell>
     );

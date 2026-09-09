@@ -196,25 +196,6 @@ export default function DashboardScreen({ navigation }) {
               />
             ))}
           </View>
-
-          <View style={styles.activityCard}>
-            <Text style={styles.activityLabel}>RECENT ACTIVITY</Text>
-            <Text style={styles.activityTitle}>
-              {dashboard.recentActivity?.title || "No recent activity"}
-            </Text>
-            {dashboard.recentActivity ? (
-              <Text style={styles.activityScore}>
-                Score: {dashboard.recentActivity.score} /{" "}
-                {dashboard.recentActivity.maxScore}
-              </Text>
-            ) : null}
-            <Text style={styles.pendingText}>
-              MCQ accuracy: {dashboard.mcqAccuracy || 0}%
-            </Text>
-            <Text style={styles.pendingText}>
-              {dashboard.pendingTasks?.length || 0} pending tasks
-            </Text>
-          </View>
         </ScrollView>
       </View>
     </SafeAreaView>
@@ -399,40 +380,6 @@ const styles = StyleSheet.create({
 
   cardsContainer: {
     width: "100%",
-  },
-
-  activityCard: {
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 16,
-    padding: 20,
-  },
-
-  activityLabel: {
-    color: colors.blue,
-    fontSize: 9,
-    fontWeight: "700",
-    letterSpacing: 1,
-  },
-
-  activityTitle: {
-    color: colors.text,
-    fontSize: 15,
-    fontWeight: "600",
-    marginTop: 10,
-  },
-
-  activityScore: {
-    color: colors.green,
-    fontSize: 12,
-    marginTop: 8,
-  },
-
-  pendingText: {
-    color: colors.muted,
-    fontSize: 11,
-    marginTop: 12,
   },
 
   pressed: {

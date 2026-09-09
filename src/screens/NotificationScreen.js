@@ -15,7 +15,7 @@
 // It only displays notification information.
 // ============================================================
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 import {
   ActivityIndicator,
@@ -33,13 +33,15 @@ import { Ionicons } from "@expo/vector-icons";
 
 import { colors } from "../constants/colors";
 
-import { getNotifications } from "../api/notificationapi";
+import { getNotifications, markNotificationRead } from "../api/notificationapi";
 
 // ============================================================
 // HEADER SCALE
 // ============================================================
 
 const HEADER_SCALE = 1.2;
+const SCALE = 1.2;
+const PAGE_SIZE = 10;
 
 // ============================================================
 // NOTIFICATION SCREEN
@@ -52,7 +54,11 @@ export default function NotificationScreen({ navigation }) {
 
   const [notifications, setNotifications] = useState([]);
 
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+
   const [loading, setLoading] = useState(true);
+
+  const initialLoad = useRef(true);
 
   const [error, setError] = useState("");
 
@@ -61,8 +67,15 @@ export default function NotificationScreen({ navigation }) {
   // ==========================================================
 
   useEffect(() => {
+    const unsubscribe = navigation.addListener("focus", loadNotifications);
+    const refreshInterval = setInterval(loadNotifications, 30000);
     loadNotifications();
-  }, []);
+
+    return () => {
+      unsubscribe();
+      clearInterval(refreshInterval);
+    };
+  }, [navigation]);
 
   // ==========================================================
   // FETCH NOTIFICATIONS
@@ -70,7 +83,9 @@ export default function NotificationScreen({ navigation }) {
 
   const loadNotifications = async () => {
     try {
-      setLoading(true);
+      if (initialLoad.current) {
+        setLoading(true);
+      }
 
       setError("");
 
@@ -83,7 +98,42 @@ export default function NotificationScreen({ navigation }) {
       setError("Unable to load notifications.");
     } finally {
       setLoading(false);
+      initialLoad.current = false;
     }
+  };
+
+  const handleNotificationPress = async (notification) => {
+    if (!notification.isRead) {
+      setNotifications((currentNotifications) =>
+        currentNotifications.map((currentNotification) =>
+          currentNotification.id === notification.id
+            ? { ...currentNotification, isRead: true }
+            : currentNotification,
+        ),
+      );
+
+      try {
+        await markNotificationRead(notification.id);
+      } catch (error) {
+        console.log("Notification read error:", error);
+      }
+    }
+
+    if (notification.type === "assignment") {
+      const assignmentId =
+        notification.assignmentId ||
+        notification.id?.replace("assignment-", "");
+
+      if (assignmentId) {
+        navigation.navigate("MCQ", { assignmentId });
+      }
+    }
+  };
+
+  const loadMoreNotifications = () => {
+    setVisibleCount((currentCount) =>
+      Math.min(currentCount + PAGE_SIZE, notifications.length),
+    );
   };
 
   // ==========================================================
@@ -93,6 +143,7 @@ export default function NotificationScreen({ navigation }) {
   const renderNotification = ({ item }) => {
     return (
       <Pressable
+        onPress={() => handleNotificationPress(item)}
         style={[styles.notificationCard, !item.isRead && styles.unreadCard]}
       >
         {/* ====================================================
@@ -129,14 +180,16 @@ export default function NotificationScreen({ navigation }) {
           <View style={styles.titleRow}>
             <Text style={styles.notificationTitle}>{item.title}</Text>
 
-            {!item.isRead && <View style={styles.unreadDot} />}
+            {!item.isRead && !item.isLocked && (
+              <View style={styles.unreadDot} />
+            )}
           </View>
 
           {/* Message */}
 
           <Text style={styles.notificationMessage}>{item.message}</Text>
 
-          {/* Subject */}   
+          {/* Subject */}
 
           <Text style={styles.subjectText}>{item.subject}</Text>
 
@@ -237,9 +290,11 @@ export default function NotificationScreen({ navigation }) {
         ===================================================== */}
 
         <FlatList
-          data={notifications}
+          data={notifications.slice(0, visibleCount)}
           keyExtractor={(item) => item.id}
           renderItem={renderNotification}
+          onEndReached={loadMoreNotifications}
+          onEndReachedThreshold={0.4}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={
             notifications.length === 0 ? styles.emptyList : styles.listContent
@@ -265,6 +320,15 @@ export default function NotificationScreen({ navigation }) {
 
               <Text style={styles.emptyText}>You are all caught up.</Text>
             </View>
+          }
+          ListFooterComponent={
+            visibleCount < notifications.length ? (
+              <View style={styles.loadMoreContainer}>
+                <ActivityIndicator size="small" color={colors.primary} />
+
+                <Text style={styles.loadMoreText}>Loading more...</Text>
+              </View>
+            ) : null
           }
         />
       </View>
@@ -374,7 +438,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     color: colors.text,
 
-    fontSize: 12,
+    fontSize: 12 * SCALE,
 
     fontWeight: "800",
 
@@ -384,7 +448,7 @@ const styles = StyleSheet.create({
   sectionSubtitle: {
     color: colors.muted,
 
-    fontSize: 10,
+    fontSize: 10 * SCALE,
 
     marginTop: 5,
   },
@@ -460,7 +524,7 @@ const styles = StyleSheet.create({
 
     color: colors.text,
 
-    fontSize: 12,
+    fontSize: 12 * SCALE,
 
     fontWeight: "800",
   },
@@ -482,9 +546,9 @@ const styles = StyleSheet.create({
 
     color: colors.muted,
 
-    fontSize: 9,
+    fontSize: 9 * SCALE,
 
-    lineHeight: 14,
+    lineHeight: 14 * SCALE,
   },
 
   subjectText: {
@@ -492,7 +556,7 @@ const styles = StyleSheet.create({
 
     color: colors.primary,
 
-    fontSize: 8,
+    fontSize: 8 * SCALE,
 
     fontWeight: "700",
   },
@@ -502,7 +566,7 @@ const styles = StyleSheet.create({
 
     color: colors.muted,
 
-    fontSize: 7,
+    fontSize: 7 * SCALE,
   },
 
   // ==========================================================
@@ -522,7 +586,7 @@ const styles = StyleSheet.create({
 
     color: colors.muted,
 
-    fontSize: 9,
+    fontSize: 9 * SCALE,
   },
 
   // ==========================================================
@@ -554,13 +618,13 @@ const styles = StyleSheet.create({
   errorText: {
     color: colors.muted,
 
-    fontSize: 9,
+    fontSize: 9 * SCALE,
   },
 
   retryText: {
     color: colors.primary,
 
-    fontSize: 9,
+    fontSize: 9 * SCALE,
 
     fontWeight: "800",
   },
@@ -590,7 +654,7 @@ const styles = StyleSheet.create({
 
     color: colors.text,
 
-    fontSize: 13,
+    fontSize: 13 * SCALE,
 
     fontWeight: "800",
   },
@@ -600,7 +664,21 @@ const styles = StyleSheet.create({
 
     color: colors.muted,
 
-    fontSize: 9,
+    fontSize: 9 * SCALE,
+  },
+
+  loadMoreContainer: {
+    alignItems: "center",
+
+    paddingVertical: 12,
+  },
+
+  loadMoreText: {
+    marginTop: 6,
+
+    color: colors.muted,
+
+    fontSize: 8 * SCALE,
   },
 
   // ==========================================================

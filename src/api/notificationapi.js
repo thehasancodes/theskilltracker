@@ -1,52 +1,200 @@
-// ============================================================
-// NOTIFICATION API
-// ============================================================
-//
-// This file handles communication with the notification
-// backend.
-//
-// The UI should NOT contain API URLs or fetch logic.
-//
-// Currently:
-// We use dummy data.
-//
-// Later:
-// Replace the dummy implementation with the real API request.
-// ============================================================
+import * as SecureStore from "expo-secure-store";
 
-import {
-  notificationMock,
-} from "../data/notificationMock";
+import { getMcqAssignments } from "./mcqApi";
+import { getStoredUser } from "./authStorage";
 
+const SEEN_ASSIGNMENTS_KEY = "skilltracker.notification.assignmentIds";
+const ASSIGNMENT_NOTIFICATIONS_KEY = "skilltracker.notification.items";
 
-// ============================================================
-// GET NOTIFICATIONS
-// ============================================================
-//
-// Returns the notifications available for the current student.
-//
-// CURRENT:
-// Returns dummy notification data.
-//
-// FUTURE:
-// This function will make a request to the backend.
-// ============================================================
+function getAssignmentId(assignment) {
+  return assignment?.id || assignment?._id || assignment?.assignmentId;
+}
 
-export async function getNotifications() {
+function getAssignmentList(value) {
+  if (Array.isArray(value)) return value;
+  if (Array.isArray(value?.assignments)) return value.assignments;
+  if (Array.isArray(value?.data)) return value.data;
+  return [];
+}
 
-  // ----------------------------------------------------------
-  // Temporary delay to behave more like a real API request.
-  // ----------------------------------------------------------
+function normalizeMatchValue(value) {
+  return String(value)
+    .trim()
+    .toLowerCase()
+    .replace(/^(semester|sem|section)\s+/, "");
+}
 
-  await new Promise(
-    (resolve) =>
-      setTimeout(resolve, 300)
+function getMatchValues(source, keys) {
+  return keys.flatMap((key) => {
+    const value = source?.[key];
+    if (Array.isArray(value)) return value;
+    return value === undefined || value === null || value === "" ? [] : [value];
+  });
+}
+
+function matchesTargetGroup(sources, user, keys) {
+  const assignmentValues = sources.flatMap((source) =>
+    getMatchValues(source, keys),
   );
 
+  if (!assignmentValues.length) return true;
 
-  // ----------------------------------------------------------
-  // Return dummy data.
-  // ----------------------------------------------------------
+  const userValues = getMatchValues(user, keys).map(normalizeMatchValue);
+  return assignmentValues.some((value) =>
+    userValues.includes(normalizeMatchValue(value)),
+  );
+}
 
-  return notificationMock;
+function isAssignmentForStudent(assignment, user) {
+  if (!user) return true;
+
+  const sources = [
+    assignment,
+    assignment?.target,
+    assignment?.targeting,
+    assignment?.audience,
+    assignment?.eligibility,
+    assignment?.assignedTo,
+  ].filter((source) => source && typeof source === "object");
+
+  return (
+    matchesTargetGroup(sources, user, [
+      "studentId",
+      "studentIds",
+      "userId",
+      "userIds",
+      "enrollmentNumber",
+      "enrollmentNo",
+      "enrollment",
+      "email",
+    ]) &&
+    matchesTargetGroup(sources, user, ["section", "sections"]) &&
+    matchesTargetGroup(sources, user, ["semester", "semesters", "sem"]) &&
+    matchesTargetGroup(sources, user, [
+      "department",
+      "departments",
+      "branch",
+      "branches",
+    ]) &&
+    matchesTargetGroup(sources, user, ["track", "tracks"])
+  );
+}
+
+function formatCreatedAt() {
+  return new Date().toLocaleString(undefined, {
+    day: "2-digit",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+function isAssignmentLocked(assignment) {
+  if (
+    assignment?.isPastDue === true ||
+    assignment?.expired === true ||
+    assignment?.isExpired === true ||
+    assignment?.locked === true ||
+    assignment?.isLocked === true
+  ) {
+    return true;
+  }
+
+  const dueTime = Date.parse(assignment?.dueDate || assignment?.dueAt || "");
+  return Number.isFinite(dueTime) && dueTime < Date.now();
+}
+
+export async function markNotificationRead(notificationId) {
+  const storedNotifications = await SecureStore.getItemAsync(
+    ASSIGNMENT_NOTIFICATIONS_KEY,
+  );
+  const notifications = storedNotifications
+    ? JSON.parse(storedNotifications)
+    : [];
+  const updatedNotifications = notifications.map((notification) =>
+    notification.id === notificationId
+      ? { ...notification, isRead: true }
+      : notification,
+  );
+
+  await SecureStore.setItemAsync(
+    ASSIGNMENT_NOTIFICATIONS_KEY,
+    JSON.stringify(updatedNotifications),
+  );
+}
+
+export async function getNotifications() {
+  const response = await getMcqAssignments();
+  const user = await getStoredUser();
+  const assignments = getAssignmentList(response).filter(
+    (assignment) =>
+      getAssignmentId(assignment) && isAssignmentForStudent(assignment, user),
+  );
+  const storedIds = await SecureStore.getItemAsync(SEEN_ASSIGNMENTS_KEY);
+  const seenIds = storedIds ? JSON.parse(storedIds) : [];
+  const seenSet = new Set(seenIds);
+
+  const storedNotifications = await SecureStore.getItemAsync(
+    ASSIGNMENT_NOTIFICATIONS_KEY,
+  );
+  const existingNotifications = storedNotifications
+    ? JSON.parse(storedNotifications)
+    : [];
+  const assignmentIds = new Set(
+    assignments.map((assignment) => String(getAssignmentId(assignment))),
+  );
+  const relevantNotifications = existingNotifications.filter((notification) => {
+    if (!notification.assignmentId) return true;
+    return assignmentIds.has(String(notification.assignmentId));
+  });
+  const isFirstSync = !storedIds;
+  const newNotifications = isFirstSync
+    ? []
+    : assignments
+        .filter((assignment) => !seenSet.has(getAssignmentId(assignment)))
+        .map((assignment) => ({
+          id: `assignment-${getAssignmentId(assignment)}`,
+          assignmentId: getAssignmentId(assignment),
+          type: "assignment",
+          title: "New Assignment",
+          message: `A new assignment was added: ${assignment.title || "Untitled assignment"}`,
+          subject: assignment.title || "Assignment",
+          createdAt: formatCreatedAt(),
+          isRead: false,
+          isLocked: isAssignmentLocked(assignment),
+        }));
+
+  const assignmentById = new Map(
+    assignments.map((assignment) => [
+      String(getAssignmentId(assignment)),
+      assignment,
+    ]),
+  );
+  const notifications = [...newNotifications, ...relevantNotifications].map(
+    (notification) => {
+      const assignmentId =
+        notification.assignmentId ||
+        notification.id?.replace("assignment-", "");
+      const assignment = assignmentById.get(String(assignmentId));
+      return assignment
+        ? {
+            ...notification,
+            assignmentId: getAssignmentId(assignment),
+            isLocked: isAssignmentLocked(assignment),
+          }
+        : notification;
+    },
+  );
+
+  await SecureStore.setItemAsync(
+    ASSIGNMENT_NOTIFICATIONS_KEY,
+    JSON.stringify(notifications),
+  );
+
+  const allIds = Array.from(
+    new Set([...seenIds, ...assignments.map(getAssignmentId)]),
+  );
+  await SecureStore.setItemAsync(SEEN_ASSIGNMENTS_KEY, JSON.stringify(allIds));
+
+  return notifications;
 }
