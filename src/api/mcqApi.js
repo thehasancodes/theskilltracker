@@ -47,7 +47,7 @@ async function request(path, options = {}) {
     });
   } catch {
     throw new McqApiError(
-      "Unable to reach the MCQ server. Check the network or dev tunnel.",
+      "Unable to reach the MCQ server. Check the network .",
     );
   }
 

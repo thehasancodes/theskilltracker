@@ -15,13 +15,9 @@ import { Ionicons } from "@expo/vector-icons";
 
 import { colors } from "../constants/colors";
 
-import {
-  getSectionLeaderboard,
-} from "../api/sectionleaderboardapi";
+import { getSectionLeaderboard } from "../api/sectionleaderboardapi";
 
-import {
-  getStoredUser,
-} from "../api/authStorage";
+import { getStoredUser } from "../api/authStorage";
 
 const HEADER_SCALE = 1.2;
 
@@ -29,24 +25,11 @@ const HEADER_SCALE = 1.2;
 // BADGE
 // ============================================================
 
-function Badge({
-  children,
-  variant = "purple",
-}) {
+function Badge({ children, variant = "purple" }) {
   return (
-    <View
-      style={[
-        styles.badge,
-        variant === "cyan" &&
-          styles.badgeCyan,
-      ]}
-    >
+    <View style={[styles.badge, variant === "cyan" && styles.badgeCyan]}>
       <Text
-        style={[
-          styles.badgeText,
-          variant === "cyan" &&
-            styles.badgeTextCyan,
-        ]}
+        style={[styles.badgeText, variant === "cyan" && styles.badgeTextCyan]}
       >
         {children}
       </Text>
@@ -58,10 +41,7 @@ function Badge({
 // RANK BADGE
 // ============================================================
 
-function RankBadge({
-  rank,
-  current = false,
-}) {
+function RankBadge({ rank, current = false }) {
   let icon = null;
 
   if (!current && rank === 1) {
@@ -77,20 +57,13 @@ function RankBadge({
       style={[
         styles.rankBadge,
 
-        rank === 1 &&
-          !current &&
-          styles.rankOne,
+        rank === 1 && !current && styles.rankOne,
 
-        rank === 2 &&
-          !current &&
-          styles.rankTwo,
+        rank === 2 && !current && styles.rankTwo,
 
-        rank === 3 &&
-          !current &&
-          styles.rankThree,
+        rank === 3 && !current && styles.rankThree,
 
-        current &&
-          styles.rankCurrent,
+        current && styles.rankCurrent,
       ]}
     >
       {icon ? (
@@ -107,13 +80,7 @@ function RankBadge({
         />
       ) : null}
 
-      <Text
-        style={[
-          styles.rankText,
-          current &&
-            styles.rankCurrentText,
-        ]}
-      >
+      <Text style={[styles.rankText, current && styles.rankCurrentText]}>
         {rank}
       </Text>
     </View>
@@ -124,27 +91,21 @@ function RankBadge({
 // LEADERBOARD ROW
 // ============================================================
 
-function LeaderboardRow({
-  student,
-  currentUser = false,
-}) {
+function LeaderboardRow({ student, currentUser = false }) {
+  console.log("[leaderboard] Rendering score:", {
+    name: student?.name,
+    score: student?.score,
+    student,
+  });
+
   return (
-    <View
-      style={[
-        styles.studentRow,
-        currentUser &&
-          styles.currentStudentRow,
-      ]}
-    >
+    <View style={[styles.studentRow, currentUser && styles.currentStudentRow]}>
       {/* ======================================================
           RANK
       ====================================================== */}
 
       <View style={styles.rankColumn}>
-        <RankBadge
-          rank={student.rank}
-          current={currentUser}
-        />
+        <RankBadge rank={student.rank} current={currentUser} />
       </View>
 
       {/* ======================================================
@@ -156,8 +117,7 @@ function LeaderboardRow({
           <Text
             style={[
               styles.studentName,
-              currentUser &&
-                styles.currentStudentName,
+              currentUser && styles.currentStudentName,
             ]}
             numberOfLines={1}
           >
@@ -166,11 +126,7 @@ function LeaderboardRow({
 
           {currentUser && (
             <View style={styles.youBadge}>
-              <Text
-                style={styles.youBadgeText}
-              >
-                YOU
-              </Text>
+              <Text style={styles.youBadgeText}>YOU</Text>
             </View>
           )}
         </View>
@@ -182,11 +138,7 @@ function LeaderboardRow({
 
       <View style={styles.scoreColumn}>
         <View style={styles.scoreBadge}>
-          <Text
-            style={styles.scoreNumber}
-          >
-            {student.score}
-          </Text>
+          <Text style={styles.scoreNumber}>{student.score}</Text>
         </View>
       </View>
     </View>
@@ -197,47 +149,26 @@ function LeaderboardRow({
 // MAIN SCREEN
 // ============================================================
 
-export default function SectionLeaderBoard({
-  navigation,
-}) {
-  const { width } =
-    useWindowDimensions();
+export default function SectionLeaderBoard({ navigation }) {
+  const { width } = useWindowDimensions();
 
-  const isSmall =
-    width < 380;
+  const isSmall = width < 380;
 
-  const isPhone =
-    width < 600;
+  const isPhone = width < 600;
 
-  const horizontalPadding = isSmall
-    ? 14
-    : isPhone
-      ? 16
-      : 32;
+  const horizontalPadding = isSmall ? 14 : isPhone ? 16 : 32;
 
   // ==========================================================
   // STATE
   // ==========================================================
 
-  const [
-    leaderboard,
-    setLeaderboard,
-  ] = useState(null);
+  const [leaderboard, setLeaderboard] = useState(null);
 
-  const [
-    user,
-    setUser,
-  ] = useState(null);
+  const [user, setUser] = useState(null);
 
-  const [
-    loading,
-    setLoading,
-  ] = useState(true);
+  const [loading, setLoading] = useState(true);
 
-  const [
-    error,
-    setError,
-  ] = useState(null);
+  const [error, setError] = useState(null);
 
   // ==========================================================
   // LOAD SECTION LEADERBOARD
@@ -252,31 +183,20 @@ export default function SectionLeaderBoard({
       setLoading(true);
       setError(null);
 
-      const [
-        leaderboardData,
-        storedUser,
-      ] = await Promise.all([
+      const [leaderboardData, storedUser] = await Promise.all([
         getSectionLeaderboard(),
         getStoredUser(),
       ]);
 
-      setLeaderboard(
-        leaderboardData
-      );
+      console.log("[leaderboard] API response:", leaderboardData);
+
+      setLeaderboard(leaderboardData);
 
       setUser(storedUser);
-
     } catch (error) {
-      console.log(
-        "Section leaderboard error:",
-        error
-      );
+      console.log("Section leaderboard error:", error);
 
-      setError(
-        error.message ||
-          "Unable to load leaderboard"
-      );
-
+      setError(error.message || "Unable to load leaderboard");
     } finally {
       setLoading(false);
     }
@@ -288,28 +208,11 @@ export default function SectionLeaderBoard({
 
   if (loading) {
     return (
-      <SafeAreaView
-        style={styles.safeArea}
-        edges={[
-          "top",
-          "bottom",
-        ]}
-      >
-        <View
-          style={
-            styles.loadingContainer
-          }
-        >
-          <ActivityIndicator
-            size="large"
-            color={colors.purple}
-          />
+      <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={colors.purple} />
 
-          <Text
-            style={styles.loadingText}
-          >
-            Loading leaderboard...
-          </Text>
+          <Text style={styles.loadingText}>Loading leaderboard...</Text>
         </View>
       </SafeAreaView>
     );
@@ -321,59 +224,28 @@ export default function SectionLeaderBoard({
 
   if (error) {
     return (
-      <SafeAreaView
-        style={styles.safeArea}
-        edges={[
-          "top",
-          "bottom",
-        ]}
-      >
-        <View
-          style={
-            styles.errorContainer
-          }
-        >
+      <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
+        <View style={styles.errorContainer}>
           <Ionicons
             name="alert-circle-outline"
             size={36}
             color={colors.purple}
           />
 
-          <Text
-            style={styles.errorTitle}
-          >
-            Unable to load leaderboard
-          </Text>
+          <Text style={styles.errorTitle}>Unable to load leaderboard</Text>
 
-          <Text
-            style={styles.errorText}
-          >
-            {error}
-          </Text>
+          <Text style={styles.errorText}>{error}</Text>
 
           <Pressable
-            onPress={
-              loadLeaderboard
-            }
-            style={({
-              pressed,
-            }) => [
+            onPress={loadLeaderboard}
+            style={({ pressed }) => [
               styles.retryButton,
-              pressed &&
-                styles.pressed,
+              pressed && styles.pressed,
             ]}
           >
-            <Ionicons
-              name="refresh-outline"
-              size={16}
-              color={colors.white}
-            />
+            <Ionicons name="refresh-outline" size={16} color={colors.white} />
 
-            <Text
-              style={styles.retryText}
-            >
-              RETRY
-            </Text>
+            <Text style={styles.retryText}>RETRY</Text>
           </Pressable>
         </View>
       </SafeAreaView>
@@ -384,107 +256,56 @@ export default function SectionLeaderBoard({
   // API DATA
   // ==========================================================
 
-  const topStudents =
-    leaderboard?.topStudents || [];
+  const topStudents = leaderboard?.topStudents || [];
 
-  const currentUser =
-    leaderboard?.myRank || null;
+  const currentUser = leaderboard?.myRank || null;
 
-  const studentsAhead =
-    currentUser?.studentsAhead || 0;
+  const studentsAhead = currentUser?.studentsAhead || 0;
 
-  const champion =
-    topStudents.length > 0
-      ? topStudents[0]
-      : null;
+  const champion = topStudents.length > 0 ? topStudents[0] : null;
 
   // ==========================================================
   // USER DATA
   // ==========================================================
 
-  const department =
-    user?.department || "-";
+  const department = user?.department || "-";
 
-  const semester =
-    user?.semester || "-";
+  const semester = user?.semester || "-";
 
-  const section =
-    user?.section || "-";
+  const section = user?.section || "-";
 
   const userName =
-    user?.name ||
-    currentUser?.name?.replace(
-      " (You)",
-      ""
-    ) ||
-    "STUDENT";
+    user?.name || currentUser?.name?.replace(" (You)", "") || "STUDENT";
 
   return (
-    <SafeAreaView
-      style={styles.safeArea}
-      edges={[
-        "top",
-        "bottom",
-      ]}
-    >
-      <View
-        style={styles.container}
-      >
-
+    <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
+      <View style={styles.container}>
         {/* ====================================================
             HEADER
         ==================================================== */}
 
-        <View
-          style={styles.header}
-        >
-          <View
-            style={styles.headerLeft}
-          >
+        <View style={styles.header}>
+          <View style={styles.headerLeft}>
             <Pressable
-              onPress={() =>
-                navigation.openDrawer()
-              }
-              style={({
-                pressed,
-              }) => [
+              onPress={() => navigation.openDrawer()}
+              style={({ pressed }) => [
                 styles.menuButton,
-                pressed &&
-                  styles.pressed,
+                pressed && styles.pressed,
               ]}
             >
               <Ionicons
                 name="menu"
-                size={
-                  22 *
-                  HEADER_SCALE
-                }
+                size={22 * HEADER_SCALE}
                 color={colors.text}
               />
             </Pressable>
 
             <View>
-              <Text
-                style={
-                  styles.headerTitle
-                }
-              >
-                Student Command Centre
-              </Text>
+              <Text style={styles.headerTitle}>Student Command Centre</Text>
 
-              <Text
-                style={
-                  styles.headerWelcome
-                }
-              >
+              <Text style={styles.headerWelcome}>
                 WELCOME{" "}
-                <Text
-                  style={
-                    styles.headerName
-                  }
-                >
-                  {userName.toUpperCase()}
-                </Text>
+                <Text style={styles.headerName}>{userName.toUpperCase()}</Text>
               </Text>
             </View>
           </View>
@@ -499,50 +320,29 @@ export default function SectionLeaderBoard({
           contentContainerStyle={[
             styles.content,
             {
-              paddingHorizontal:
-                horizontalPadding,
+              paddingHorizontal: horizontalPadding,
             },
           ]}
-          showsVerticalScrollIndicator={
-            false
-          }
+          showsVerticalScrollIndicator={false}
         >
-
           {/* ==================================================
               HERO
           ================================================== */}
 
-          <View
-            style={styles.heroCard}
-          >
-            <View
-              style={styles.heroBadges}
-            >
-              <Badge>
-                SECTION RANKINGS
-              </Badge>
+          <View style={styles.heroCard}>
+            <View style={styles.heroBadges}>
+              <Badge>SECTION RANKINGS</Badge>
 
               <Badge variant="cyan">
-                {department} · SEM{" "}
-                {semester} · SECTION{" "}
-                {section}
+                {department} · SEM {semester} · SECTION {section}
               </Badge>
             </View>
 
-            <Text
-              style={styles.heroTitle}
-            >
-              MY SECTION LEADERBOARD
-            </Text>
+            <Text style={styles.heroTitle}>MY SECTION LEADERBOARD</Text>
 
-            <Text
-              style={
-                styles.heroDescription
-              }
-            >
-              Your real-time standings
-              among classmates based on
-              your leaderboard score.
+            <Text style={styles.heroDescription}>
+              Your real-time standings among classmates based on your
+              leaderboard score.
             </Text>
           </View>
 
@@ -553,26 +353,16 @@ export default function SectionLeaderBoard({
           <View
             style={[
               styles.statsContainer,
-              isPhone &&
-                styles.statsContainerMobile,
+              isPhone && styles.statsContainerMobile,
             ]}
           >
-
             {/* =================================================
                 CHAMPION
             ================================================= */}
 
-            <View
-              style={styles.statCard}
-            >
-              <View
-                style={styles.statHeader}
-              >
-                <View
-                  style={
-                    styles.iconCircleGold
-                  }
-                >
+            <View style={styles.statCard}>
+              <View style={styles.statHeader}>
+                <View style={styles.iconCircleGold}>
                   <Ionicons
                     name="trophy-outline"
                     size={16}
@@ -580,31 +370,15 @@ export default function SectionLeaderBoard({
                   />
                 </View>
 
-                <Text
-                  style={styles.goldLabel}
-                >
-                  SECTION CHAMPION
-                </Text>
+                <Text style={styles.goldLabel}>SECTION CHAMPION</Text>
               </View>
 
-              <Text
-                style={
-                  styles.championName
-                }
-                numberOfLines={1}
-              >
-                {champion?.name ||
-                  "No data"}
+              <Text style={styles.championName} numberOfLines={1}>
+                {champion?.name || "No data"}
               </Text>
 
-              <Text
-                style={
-                  styles.championStats
-                }
-              >
-                {champion?.score ??
-                  0}{" "}
-                score
+              <Text style={styles.championStats}>
+                {champion?.score ?? 0} score
               </Text>
             </View>
 
@@ -612,17 +386,9 @@ export default function SectionLeaderBoard({
                 YOUR RANK
             ================================================= */}
 
-            <View
-              style={styles.statCard}
-            >
-              <View
-                style={styles.statHeader}
-              >
-                <View
-                  style={
-                    styles.iconCirclePurple
-                  }
-                >
+            <View style={styles.statCard}>
+              <View style={styles.statHeader}>
+                <View style={styles.iconCirclePurple}>
                   <Ionicons
                     name="podium-outline"
                     size={16}
@@ -630,31 +396,15 @@ export default function SectionLeaderBoard({
                   />
                 </View>
 
-                <Text
-                  style={
-                    styles.purpleLabel
-                  }
-                >
-                  YOUR RANK
-                </Text>
+                <Text style={styles.purpleLabel}>YOUR RANK</Text>
               </View>
 
-              <View
-                style={styles.rankInfo}
-              >
-                <Text
-                  style={styles.bigRank}
-                >
-                  #{currentUser?.rank ??
-                    "-"}
-                </Text>
+              <View style={styles.rankInfo}>
+                <Text style={styles.bigRank}>#{currentUser?.rank ?? "-"}</Text>
               </View>
 
-              <Text
-                style={styles.rankAhead}
-              >
-                {studentsAhead} students
-                ahead of you
+              <Text style={styles.rankAhead}>
+                {studentsAhead} students ahead of you
               </Text>
             </View>
           </View>
@@ -663,52 +413,26 @@ export default function SectionLeaderBoard({
               LEADERBOARD
           ================================================== */}
 
-          <View
-            style={
-              styles.leaderboardCard
-            }
-          >
-
+          <View style={styles.leaderboardCard}>
             {/* =================================================
                 CARD HEADER
             ================================================= */}
 
-            <View
-              style={
-                styles.leaderboardHeader
-              }
-            >
+            <View style={styles.leaderboardHeader}>
               <View>
-                <Text
-                  style={
-                    styles.leaderboardTitle
-                  }
-                >
-                  TOP STUDENTS IN YOUR
-                  SECTION
+                <Text style={styles.leaderboardTitle}>
+                  TOP STUDENTS IN YOUR SECTION
                 </Text>
 
-                <Text
-                  style={
-                    styles.leaderboardSubtitle
-                  }
-                >
+                <Text style={styles.leaderboardSubtitle}>
                   Current standings
                 </Text>
               </View>
 
-              <View
-                style={styles.liveBadge}
-              >
-                <View
-                  style={styles.liveDot}
-                />
+              <View style={styles.liveBadge}>
+                <View style={styles.liveDot} />
 
-                <Text
-                  style={styles.liveText}
-                >
-                  LIVE
-                </Text>
+                <Text style={styles.liveText}>LIVE</Text>
               </View>
             </View>
 
@@ -717,69 +441,26 @@ export default function SectionLeaderBoard({
             ================================================= */}
 
             <ScrollView
-              style={
-                styles.leaderboardScroll
-              }
-              nestedScrollEnabled={
-                true
-              }
-              showsVerticalScrollIndicator={
-                true
-              }
+              style={styles.leaderboardScroll}
+              nestedScrollEnabled={true}
+              showsVerticalScrollIndicator={true}
             >
-              <View
-                style={styles.table}
-              >
-
+              <View style={styles.table}>
                 {/* =============================================
                     TABLE HEADER
                 ============================================= */}
 
-                <View
-                  style={
-                    styles.tableHeader
-                  }
-                >
-                  <View
-                    style={
-                      styles.rankColumn
-                    }
-                  >
-                    <Text
-                      style={
-                        styles.tableHeaderText
-                      }
-                    >
-                      RANK
-                    </Text>
+                <View style={styles.tableHeader}>
+                  <View style={styles.rankColumn}>
+                    <Text style={styles.tableHeaderText}>RANK</Text>
                   </View>
 
-                  <View
-                    style={
-                      styles.studentColumn
-                    }
-                  >
-                    <Text
-                      style={
-                        styles.tableHeaderText
-                      }
-                    >
-                      STUDENT
-                    </Text>
+                  <View style={styles.studentColumn}>
+                    <Text style={styles.tableHeaderText}>STUDENT</Text>
                   </View>
 
-                  <View
-                    style={
-                      styles.scoreColumn
-                    }
-                  >
-                    <Text
-                      style={
-                        styles.tableHeaderText
-                      }
-                    >
-                      SCORE
-                    </Text>
+                  <View style={styles.scoreColumn}>
+                    <Text style={styles.tableHeaderText}>SCORE</Text>
                   </View>
                 </View>
 
@@ -787,44 +468,21 @@ export default function SectionLeaderBoard({
                     TOP STUDENTS
                 ============================================= */}
 
-                {topStudents.map(
-                  (student) => (
-                    <LeaderboardRow
-                      key={student.id}
-                      student={student}
-                    />
-                  )
-                )}
+                {topStudents.map((student) => (
+                  <LeaderboardRow key={student.id} student={student} />
+                ))}
 
                 {/* =============================================
                     SEPARATOR
                 ============================================= */}
 
                 {currentUser && (
-                  <View
-                    style={
-                      styles.separator
-                    }
-                  >
-                    <View
-                      style={
-                        styles.separatorLine
-                      }
-                    />
+                  <View style={styles.separator}>
+                    <View style={styles.separatorLine} />
 
-                    <Text
-                      style={
-                        styles.separatorText
-                      }
-                    >
-                      YOUR POSITION
-                    </Text>
+                    <Text style={styles.separatorText}>YOUR POSITION</Text>
 
-                    <View
-                      style={
-                        styles.separatorLine
-                      }
-                    />
+                    <View style={styles.separatorLine} />
                   </View>
                 )}
 
@@ -833,16 +491,8 @@ export default function SectionLeaderBoard({
                 ============================================= */}
 
                 {currentUser && (
-                  <LeaderboardRow
-                    student={
-                      currentUser
-                    }
-                    currentUser={
-                      true
-                    }
-                  />
+                  <LeaderboardRow student={currentUser} currentUser={true} />
                 )}
-
               </View>
             </ScrollView>
           </View>
@@ -851,31 +501,20 @@ export default function SectionLeaderBoard({
               FOOTER INFO
           ================================================== */}
 
-          <View
-            style={styles.infoCard}
-          >
+          <View style={styles.infoCard}>
             <Ionicons
               name="information-circle-outline"
               size={18}
-              color={
-                colors.mutedDark
-              }
+              color={colors.mutedDark}
             />
 
-            <Text
-              style={styles.infoText}
-            >
-              Rankings are calculated
-              using the score provided by
-              the Section Leaderboard
-              service.
+            <Text style={styles.infoText}>
+              Rankings are calculated using the score provided by the Section
+              Leaderboard service.
             </Text>
           </View>
 
-          <View
-            style={styles.bottomSpace}
-          />
-
+          <View style={styles.bottomSpace} />
         </ScrollView>
       </View>
     </SafeAreaView>
@@ -887,21 +526,18 @@ export default function SectionLeaderBoard({
 // ============================================================
 
 const styles = StyleSheet.create({
-
   // ==========================================================
   // ROOT
   // ==========================================================
 
   safeArea: {
     flex: 1,
-    backgroundColor:
-      colors.background,
+    backgroundColor: colors.background,
   },
 
   container: {
     flex: 1,
-    backgroundColor:
-      colors.background,
+    backgroundColor: colors.background,
   },
 
   scrollView: {
@@ -918,21 +554,17 @@ const styles = StyleSheet.create({
   // ==========================================================
 
   header: {
-    minHeight:
-      70 * HEADER_SCALE,
+    minHeight: 70 * HEADER_SCALE,
 
-    paddingHorizontal:
-      16 * HEADER_SCALE,
+    paddingHorizontal: 16 * HEADER_SCALE,
 
     flexDirection: "row",
     alignItems: "center",
 
     borderBottomWidth: 1,
-    borderBottomColor:
-      colors.border,
+    borderBottomColor: colors.border,
 
-    backgroundColor:
-      colors.background,
+    backgroundColor: colors.background,
   },
 
   headerLeft: {
@@ -941,34 +573,27 @@ const styles = StyleSheet.create({
   },
 
   menuButton: {
-    width:
-      42 * HEADER_SCALE,
+    width: 42 * HEADER_SCALE,
 
-    height:
-      42 * HEADER_SCALE,
+    height: 42 * HEADER_SCALE,
 
-    borderRadius:
-      11 * HEADER_SCALE,
+    borderRadius: 11 * HEADER_SCALE,
 
-    backgroundColor:
-      colors.surface,
+    backgroundColor: colors.surface,
 
     borderWidth: 1,
-    borderColor:
-      colors.border,
+    borderColor: colors.border,
 
     alignItems: "center",
     justifyContent: "center",
 
-    marginRight:
-      11 * HEADER_SCALE,
+    marginRight: 11 * HEADER_SCALE,
   },
 
   headerTitle: {
     color: colors.text,
 
-    fontSize:
-      16 * HEADER_SCALE,
+    fontSize: 16 * HEADER_SCALE,
 
     fontWeight: "700",
   },
@@ -976,15 +601,13 @@ const styles = StyleSheet.create({
   headerWelcome: {
     color: colors.muted,
 
-    fontSize:
-      7.5 * HEADER_SCALE,
+    fontSize: 7.5 * HEADER_SCALE,
 
     fontWeight: "700",
 
     letterSpacing: 1,
 
-    marginTop:
-      3 * HEADER_SCALE,
+    marginTop: 3 * HEADER_SCALE,
   },
 
   headerName: {
@@ -996,12 +619,10 @@ const styles = StyleSheet.create({
   // ==========================================================
 
   heroCard: {
-    backgroundColor:
-      colors.card,
+    backgroundColor: colors.card,
 
     borderWidth: 1,
-    borderColor:
-      colors.border,
+    borderColor: colors.border,
 
     borderRadius: 17,
 
@@ -1032,20 +653,16 @@ const styles = StyleSheet.create({
 
     borderRadius: 20,
 
-    backgroundColor:
-      colors.purpleDark,
+    backgroundColor: colors.purpleDark,
 
     borderWidth: 1,
-    borderColor:
-      colors.purpleBorder,
+    borderColor: colors.purpleBorder,
   },
 
   badgeCyan: {
-    backgroundColor:
-      colors.blueDark,
+    backgroundColor: colors.blueDark,
 
-    borderColor:
-      colors.cyanDark,
+    borderColor: colors.cyanDark,
   },
 
   badgeText: {
@@ -1109,12 +726,10 @@ const styles = StyleSheet.create({
 
     padding: 17,
 
-    backgroundColor:
-      colors.card,
+    backgroundColor: colors.card,
 
     borderWidth: 1,
-    borderColor:
-      colors.border,
+    borderColor: colors.border,
 
     borderRadius: 15,
   },
@@ -1132,8 +747,7 @@ const styles = StyleSheet.create({
 
     borderRadius: 8,
 
-    backgroundColor:
-      colors.yellowDark,
+    backgroundColor: colors.yellowDark,
 
     alignItems: "center",
     justifyContent: "center",
@@ -1145,8 +759,7 @@ const styles = StyleSheet.create({
 
     borderRadius: 8,
 
-    backgroundColor:
-      colors.purpleDark,
+    backgroundColor: colors.purpleDark,
 
     alignItems: "center",
     justifyContent: "center",
@@ -1218,12 +831,10 @@ const styles = StyleSheet.create({
 
     padding: 15,
 
-    backgroundColor:
-      colors.card,
+    backgroundColor: colors.card,
 
     borderWidth: 1,
-    borderColor:
-      colors.border,
+    borderColor: colors.border,
 
     borderRadius: 16,
   },
@@ -1231,8 +842,7 @@ const styles = StyleSheet.create({
   leaderboardHeader: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent:
-      "space-between",
+    justifyContent: "space-between",
 
     marginBottom: 14,
   },
@@ -1245,8 +855,7 @@ const styles = StyleSheet.create({
   },
 
   leaderboardSubtitle: {
-    color:
-      colors.mutedDark,
+    color: colors.mutedDark,
 
     fontSize: 9,
 
@@ -1262,12 +871,10 @@ const styles = StyleSheet.create({
 
     borderRadius: 20,
 
-    backgroundColor:
-      colors.greenDark,
+    backgroundColor: colors.greenDark,
 
     borderWidth: 1,
-    borderColor:
-      colors.greenDark,
+    borderColor: colors.greenDark,
   },
 
   liveDot: {
@@ -1276,8 +883,7 @@ const styles = StyleSheet.create({
 
     borderRadius: 5,
 
-    backgroundColor:
-      colors.green,
+    backgroundColor: colors.green,
 
     marginRight: 5,
   },
@@ -1307,8 +913,7 @@ const styles = StyleSheet.create({
     overflow: "hidden",
 
     borderWidth: 1,
-    borderColor:
-      colors.border,
+    borderColor: colors.border,
 
     borderRadius: 12,
   },
@@ -1319,12 +924,10 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
 
-    backgroundColor:
-      colors.background,
+    backgroundColor: colors.background,
 
     borderBottomWidth: 1,
-    borderBottomColor:
-      colors.border,
+    borderBottomColor: colors.border,
   },
 
   tableHeaderText: {
@@ -1368,17 +971,14 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
 
-    backgroundColor:
-      colors.footer,
+    backgroundColor: colors.footer,
 
     borderBottomWidth: 1,
-    borderBottomColor:
-      colors.border,
+    borderBottomColor: colors.border,
   },
 
   currentStudentRow: {
-    backgroundColor:
-      colors.purpleDark,
+    backgroundColor: colors.purpleDark,
 
     borderBottomWidth: 0,
   },
@@ -1393,12 +993,10 @@ const styles = StyleSheet.create({
 
     borderRadius: 9,
 
-    backgroundColor:
-      colors.blueDark,
+    backgroundColor: colors.blueDark,
 
     borderWidth: 1,
-    borderColor:
-      colors.borderLight,
+    borderColor: colors.borderLight,
 
     alignItems: "center",
     justifyContent: "center",
@@ -1409,35 +1007,27 @@ const styles = StyleSheet.create({
   },
 
   rankOne: {
-    backgroundColor:
-      colors.yellowDark,
+    backgroundColor: colors.yellowDark,
 
-    borderColor:
-      colors.yellow,
+    borderColor: colors.yellow,
   },
 
   rankTwo: {
-    backgroundColor:
-      colors.surface3,
+    backgroundColor: colors.surface3,
 
-    borderColor:
-      colors.borderLight,
+    borderColor: colors.borderLight,
   },
 
   rankThree: {
-    backgroundColor:
-      colors.yellowDark,
+    backgroundColor: colors.yellowDark,
 
-    borderColor:
-      colors.yellow,
+    borderColor: colors.yellow,
   },
 
   rankCurrent: {
-    backgroundColor:
-      colors.purpleDark,
+    backgroundColor: colors.purpleDark,
 
-    borderColor:
-      colors.purpleBorder,
+    borderColor: colors.purpleBorder,
   },
 
   rankText: {
@@ -1481,8 +1071,7 @@ const styles = StyleSheet.create({
 
     borderRadius: 5,
 
-    backgroundColor:
-      colors.primary,
+    backgroundColor: colors.primary,
   },
 
   youBadgeText: {
@@ -1508,12 +1097,10 @@ const styles = StyleSheet.create({
 
     borderRadius: 7,
 
-    backgroundColor:
-      colors.background,
+    backgroundColor: colors.background,
 
     borderWidth: 1,
-    borderColor:
-      colors.border,
+    borderColor: colors.border,
 
     alignItems: "center",
   },
@@ -1537,8 +1124,7 @@ const styles = StyleSheet.create({
 
     paddingHorizontal: 12,
 
-    backgroundColor:
-      colors.background,
+    backgroundColor: colors.background,
 
     gap: 8,
   },
@@ -1548,13 +1134,11 @@ const styles = StyleSheet.create({
 
     height: 1,
 
-    backgroundColor:
-      colors.border,
+    backgroundColor: colors.border,
   },
 
   separatorText: {
-    color:
-      colors.mutedDark,
+    color: colors.mutedDark,
 
     fontSize: 6.5,
     fontWeight: "800",
@@ -1573,12 +1157,10 @@ const styles = StyleSheet.create({
 
     borderRadius: 12,
 
-    backgroundColor:
-      colors.card,
+    backgroundColor: colors.card,
 
     borderWidth: 1,
-    borderColor:
-      colors.border,
+    borderColor: colors.border,
 
     flexDirection: "row",
     alignItems: "center",
@@ -1587,8 +1169,7 @@ const styles = StyleSheet.create({
   infoText: {
     flex: 1,
 
-    color:
-      colors.mutedDark,
+    color: colors.mutedDark,
 
     fontSize: 8.5,
 
@@ -1666,8 +1247,7 @@ const styles = StyleSheet.create({
 
     borderRadius: 9,
 
-    backgroundColor:
-      colors.primary,
+    backgroundColor: colors.primary,
   },
 
   retryText: {
