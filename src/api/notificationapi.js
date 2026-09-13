@@ -1,7 +1,6 @@
 import * as SecureStore from "expo-secure-store";
 
 import { getMcqAssignments } from "./mcqApi";
-import { getStoredUser } from "./authStorage";
 
 const SEEN_ASSIGNMENTS_KEY = "skilltracker.notification.assignmentIds";
 const ASSIGNMENT_NOTIFICATIONS_KEY = "skilltracker.notification.items";
@@ -15,69 +14,6 @@ function getAssignmentList(value) {
   if (Array.isArray(value?.assignments)) return value.assignments;
   if (Array.isArray(value?.data)) return value.data;
   return [];
-}
-
-function normalizeMatchValue(value) {
-  return String(value)
-    .trim()
-    .toLowerCase()
-    .replace(/^(semester|sem|section)\s+/, "");
-}
-
-function getMatchValues(source, keys) {
-  return keys.flatMap((key) => {
-    const value = source?.[key];
-    if (Array.isArray(value)) return value;
-    return value === undefined || value === null || value === "" ? [] : [value];
-  });
-}
-
-function matchesTargetGroup(sources, user, keys) {
-  const assignmentValues = sources.flatMap((source) =>
-    getMatchValues(source, keys),
-  );
-
-  if (!assignmentValues.length) return true;
-
-  const userValues = getMatchValues(user, keys).map(normalizeMatchValue);
-  return assignmentValues.some((value) =>
-    userValues.includes(normalizeMatchValue(value)),
-  );
-}
-
-function isAssignmentForStudent(assignment, user) {
-  if (!user) return true;
-
-  const sources = [
-    assignment,
-    assignment?.target,
-    assignment?.targeting,
-    assignment?.audience,
-    assignment?.eligibility,
-    assignment?.assignedTo,
-  ].filter((source) => source && typeof source === "object");
-
-  return (
-    matchesTargetGroup(sources, user, [
-      "studentId",
-      "studentIds",
-      "userId",
-      "userIds",
-      "enrollmentNumber",
-      "enrollmentNo",
-      "enrollment",
-      "email",
-    ]) &&
-    matchesTargetGroup(sources, user, ["section", "sections"]) &&
-    matchesTargetGroup(sources, user, ["semester", "semesters", "sem"]) &&
-    matchesTargetGroup(sources, user, [
-      "department",
-      "departments",
-      "branch",
-      "branches",
-    ]) &&
-    matchesTargetGroup(sources, user, ["track", "tracks"])
-  );
 }
 
 function formatCreatedAt() {
@@ -125,10 +61,8 @@ export async function markNotificationRead(notificationId) {
 
 export async function getNotifications() {
   const response = await getMcqAssignments();
-  const user = await getStoredUser();
-  const assignments = getAssignmentList(response).filter(
-    (assignment) =>
-      getAssignmentId(assignment) && isAssignmentForStudent(assignment, user),
+  const assignments = getAssignmentList(response).filter((assignment) =>
+    getAssignmentId(assignment),
   );
   const storedIds = await SecureStore.getItemAsync(SEEN_ASSIGNMENTS_KEY);
   const seenIds = storedIds ? JSON.parse(storedIds) : [];

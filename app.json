@@ -4,25 +4,44 @@
     "slug": "theskilltracker",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/allinone.png",
     "userInterfaceStyle": "light",
+
     "ios": {
       "supportsTablet": true
     },
+
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/android-icon-foreground.png",
-        "backgroundImage": "./assets/android-icon-background.png",
-        "monochromeImage": "./assets/android-icon-monochrome.png"
-      }
+        "foregroundImage": "./assets/allinone.png",
+        "backgroundImage": "./assets/allinone.png",
+        "monochromeImage": "./assets/allinone.png"
+      },
+      "package": "com.thehasancodes.theskilltracker"
     },
+
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/allinone.png"
     },
+
     "plugins": [
       "expo-font",
-      "expo-secure-store"
-    ]
+      "expo-secure-store",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "buildArchs": ["arm64-v8a"]
+          }
+        }
+      ]
+    ],
+
+    "extra": {
+      "eas": {
+        "projectId": "0bf7c5ec-4bc8-42d3-b1e0-f04a55335f54"
+      }
+    }
   }
 }

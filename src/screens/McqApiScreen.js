@@ -321,7 +321,7 @@ export default function McqApiScreen({ navigation, route }) {
 
     const payload = questions.map((question, questionIndex) => ({
       questionIndex,
-      selectedoptionIndex: answers[question.id] ?? -1,
+      selectedOptionIndex: answers[question.id] ?? -1,
     }));
 
     setBusy(true);
@@ -358,7 +358,7 @@ export default function McqApiScreen({ navigation, route }) {
           ),
         ),
       );
-      setResult(submission);
+      setResult({ submission: submittedResult });
     } catch (requestError) {
       setError(getErrorMessage(requestError));
     } finally {
@@ -376,7 +376,7 @@ export default function McqApiScreen({ navigation, route }) {
     const assignmentId = getAssignmentId(assignment);
     const payload = questions.map((question, questionIndex) => ({
       questionIndex,
-      selectedoptionIndex: answers[question.id] ?? -1,
+      selectedOptionIndex: answers[question.id] ?? -1,
     }));
 
     try {
