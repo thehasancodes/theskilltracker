@@ -92,6 +92,8 @@ export default function ProfileScreen({ navigation }) {
   const [profile, setProfile] = useState(null);
   const [profileError, setProfileError] = useState(false);
 
+  // Fetches the student profile data when the screen loads.
+  // If the request succeeds, the profile state is updated; if it fails, an error flag is set.
   useEffect(() => {
     let mounted = true;
 
@@ -135,14 +137,19 @@ export default function ProfileScreen({ navigation }) {
   // HANDLERS
   // ==========================================================
 
+  // Opens the app drawer so the user can navigate to other screens.
   const openDrawer = () => {
     navigation?.openDrawer?.();
   };
 
+  // Placeholder action for editing the student profile.
+  // Currently logs to the console until the actual edit feature is implemented.
   const handleEditProfile = () => {
     console.log("Edit Profile");
   };
 
+  // Placeholder for viewing the full placement record.
+  // This is a navigation or action stub for future placement details.
   const handlePlacementRecord = () => {
     console.log("Placement Record");
   };
@@ -407,6 +414,7 @@ export default function ProfileScreen({ navigation }) {
 
             {/* View Record Button */}
 
+            {/* Toggles the expanded academic record table when the user wants to show or hide semester details. */}
             <Pressable
               onPress={() => setShowSemesterTable(!showSemesterTable)}
               style={({ pressed }) => [
@@ -459,6 +467,7 @@ export default function ProfileScreen({ navigation }) {
 
                 {/* Table Rows */}
 
+                {/* Maps through each semester row and applies highlight styling based on the semester status. */}
                 {semesters.map((item, index) => {
                   const isCurrent = item.status === "Current";
 
