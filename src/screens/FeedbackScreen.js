@@ -5,6 +5,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -87,14 +88,17 @@ export default function FeedbackScreen({ navigation }) {
       <KeyboardAvoidingView
         style={styles.keyboardAvoidingView}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
       >
         <View style={styles.container}>
           {/* ====================================================
-            HEADER
-        ==================================================== */}
+              HEADER
+          ==================================================== */}
 
           <View style={styles.header}>
             <View style={styles.headerLeft}>
+              {/* Menu Button */}
+
               <Pressable
                 onPress={openDrawer}
                 style={({ pressed }) => [
@@ -105,6 +109,8 @@ export default function FeedbackScreen({ navigation }) {
                 <Ionicons name="menu" size={22 * SCALE} color={colors.text} />
               </Pressable>
 
+              {/* Header Title */}
+
               <View>
                 <Text style={styles.headerTitle}>Student Command Centre</Text>
 
@@ -114,19 +120,31 @@ export default function FeedbackScreen({ navigation }) {
           </View>
 
           {/* ====================================================
-            CONTENT
-        ==================================================== */}
+              SCROLLABLE CONTENT
+          ==================================================== */}
 
-          <View style={styles.content}>
+          <ScrollView
+            style={styles.scrollView}
+            contentContainerStyle={styles.content}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+            keyboardDismissMode={
+              Platform.OS === "ios" ? "interactive" : "on-drag"
+            }
+          >
             {/* ==================================================
-              CATEGORY
-          ================================================== */}
+                CATEGORY
+            ================================================== */}
 
             <View style={[styles.sectionHeading, styles.firstSectionHeading]}>
               <Text style={styles.sectionEyebrow}>FEEDBACK TYPE</Text>
 
               <Text style={styles.sectionTitle}>What is this about?</Text>
             </View>
+
+            {/* ==================================================
+                CATEGORY CARD
+            ================================================== */}
 
             <View style={styles.categoryCard}>
               {categories.map((item, index) => {
@@ -142,6 +160,8 @@ export default function FeedbackScreen({ navigation }) {
                         pressed && styles.pressed,
                       ]}
                     >
+                      {/* Category Icon */}
+
                       <View
                         style={[
                           styles.categoryIcon,
@@ -155,6 +175,8 @@ export default function FeedbackScreen({ navigation }) {
                         />
                       </View>
 
+                      {/* Category Text */}
+
                       <View style={styles.categoryContent}>
                         <Text
                           style={[
@@ -166,12 +188,16 @@ export default function FeedbackScreen({ navigation }) {
                         </Text>
                       </View>
 
+                      {/* Radio */}
+
                       <View
                         style={[styles.radio, selected && styles.radioSelected]}
                       >
                         {selected && <View style={styles.radioDot} />}
                       </View>
                     </Pressable>
+
+                    {/* Divider */}
 
                     {index !== categories.length - 1 && (
                       <View style={styles.categoryDivider} />
@@ -182,8 +208,8 @@ export default function FeedbackScreen({ navigation }) {
             </View>
 
             {/* ==================================================
-              FEEDBACK INPUT
-          ================================================== */}
+                FEEDBACK INPUT HEADING
+            ================================================== */}
 
             <View style={styles.sectionHeading}>
               <Text style={styles.sectionEyebrow}>YOUR FEEDBACK</Text>
@@ -195,7 +221,13 @@ export default function FeedbackScreen({ navigation }) {
               </Text>
             </View>
 
+            {/* ==================================================
+                FEEDBACK INPUT CARD
+            ================================================== */}
+
             <View style={styles.inputCard}>
+              {/* Input Header */}
+
               <View style={styles.inputHeader}>
                 <Ionicons
                   name="create-outline"
@@ -206,17 +238,23 @@ export default function FeedbackScreen({ navigation }) {
                 <Text style={styles.inputHeaderText}>Your message</Text>
               </View>
 
+              {/* ==================================================
+                  SCROLLABLE TEXT INPUT
+              ================================================== */}
+
               <TextInput
                 value={feedback}
                 onChangeText={setFeedback}
                 placeholder="Write your feedback here..."
                 placeholderTextColor={colors.mutedDark}
                 multiline
-                scrollEnabled
+                scrollEnabled={true}
                 textAlignVertical="top"
                 maxLength={1000}
                 style={styles.textInput}
               />
+
+              {/* Character Counter */}
 
               <View style={styles.characterRow}>
                 <Text style={styles.characterHint}>
@@ -230,8 +268,8 @@ export default function FeedbackScreen({ navigation }) {
             </View>
 
             {/* ==================================================
-              SUBMIT
-          ================================================== */}
+                SUBMIT BUTTON
+            ================================================== */}
 
             <Pressable
               onPress={submitFeedback}
@@ -240,6 +278,8 @@ export default function FeedbackScreen({ navigation }) {
                 pressed && styles.pressed,
               ]}
             >
+              {/* Submit Icon */}
+
               <View style={styles.submitIcon}>
                 <Ionicons
                   name="send-outline"
@@ -248,7 +288,11 @@ export default function FeedbackScreen({ navigation }) {
                 />
               </View>
 
+              {/* Button Text */}
+
               <Text style={styles.submitButtonText}>Submit Feedback</Text>
+
+              {/* Arrow */}
 
               <Ionicons
                 name="arrow-forward"
@@ -258,8 +302,8 @@ export default function FeedbackScreen({ navigation }) {
             </Pressable>
 
             {/* ==================================================
-              PRIVACY NOTE
-          ================================================== */}
+                PRIVACY / INFORMATION NOTE
+            ================================================== */}
 
             <View style={styles.footer}>
               <Ionicons
@@ -274,8 +318,10 @@ export default function FeedbackScreen({ navigation }) {
               </Text>
             </View>
 
+            {/* Bottom Space */}
+
             <View style={styles.bottomSpace} />
-          </View>
+          </ScrollView>
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -293,11 +339,13 @@ const styles = StyleSheet.create({
 
   safeArea: {
     flex: 1,
+
     backgroundColor: colors.background,
   },
 
   container: {
     flex: 1,
+
     backgroundColor: colors.background,
   },
 
@@ -305,9 +353,17 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 
+  scrollView: {
+    flex: 1,
+  },
+
   content: {
+    flexGrow: 1,
+
     paddingHorizontal: 16 * SCALE,
+
     paddingTop: 18 * SCALE,
+
     paddingBottom: 40 * SCALE,
   },
 
@@ -321,20 +377,25 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16 * SCALE,
 
     flexDirection: "row",
+
     alignItems: "center",
+
     justifyContent: "space-between",
 
     borderBottomWidth: 1,
+
     borderBottomColor: colors.border,
   },
 
   headerLeft: {
     flexDirection: "row",
+
     alignItems: "center",
   },
 
   menuButton: {
     width: 42 * SCALE,
+
     height: 42 * SCALE,
 
     borderRadius: 11 * SCALE,
@@ -342,9 +403,11 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
 
     borderWidth: 1,
+
     borderColor: colors.border,
 
     alignItems: "center",
+
     justifyContent: "center",
 
     marginRight: 11 * SCALE,
@@ -354,6 +417,7 @@ const styles = StyleSheet.create({
     color: colors.white,
 
     fontSize: 16 * SCALE,
+
     fontWeight: "700",
   },
 
@@ -361,6 +425,7 @@ const styles = StyleSheet.create({
     color: colors.muted,
 
     fontSize: 7.5 * SCALE,
+
     fontWeight: "700",
 
     letterSpacing: 1,
@@ -370,9 +435,11 @@ const styles = StyleSheet.create({
 
   headerBadge: {
     flexDirection: "row",
+
     alignItems: "center",
 
     paddingHorizontal: 9 * SCALE,
+
     paddingVertical: 6 * SCALE,
 
     borderRadius: 20 * SCALE,
@@ -380,11 +447,13 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface2,
 
     borderWidth: 1,
+
     borderColor: colors.border,
   },
 
   headerBadgeDot: {
     width: 5 * SCALE,
+
     height: 5 * SCALE,
 
     borderRadius: 3,
@@ -398,6 +467,7 @@ const styles = StyleSheet.create({
     color: colors.muted,
 
     fontSize: 7 * SCALE,
+
     fontWeight: "800",
 
     letterSpacing: 0.7,
@@ -415,6 +485,7 @@ const styles = StyleSheet.create({
     color: colors.purple,
 
     fontSize: 7 * SCALE,
+
     fontWeight: "800",
 
     letterSpacing: 1,
@@ -424,6 +495,7 @@ const styles = StyleSheet.create({
     color: colors.white,
 
     fontSize: 22 * SCALE,
+
     fontWeight: "800",
 
     marginTop: 5 * SCALE,
@@ -433,6 +505,7 @@ const styles = StyleSheet.create({
     color: colors.muted,
 
     fontSize: 9 * SCALE,
+
     lineHeight: 15 * SCALE,
 
     marginTop: 5 * SCALE,
@@ -446,6 +519,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
 
     borderWidth: 1,
+
     borderColor: colors.border,
 
     borderRadius: 17 * SCALE,
@@ -459,11 +533,13 @@ const styles = StyleSheet.create({
     width: "100%",
 
     flexDirection: "row",
+
     alignItems: "center",
   },
 
   cardIcon: {
     width: 40 * SCALE,
+
     height: 40 * SCALE,
 
     borderRadius: 11 * SCALE,
@@ -471,9 +547,11 @@ const styles = StyleSheet.create({
     backgroundColor: colors.yellowDark,
 
     borderWidth: 1,
+
     borderColor: "#57400c",
 
     alignItems: "center",
+
     justifyContent: "center",
 
     marginRight: 10 * SCALE,
@@ -487,6 +565,7 @@ const styles = StyleSheet.create({
     color: colors.white,
 
     fontSize: 11 * SCALE,
+
     fontWeight: "700",
   },
 
@@ -500,6 +579,7 @@ const styles = StyleSheet.create({
 
   starsRow: {
     flexDirection: "row",
+
     alignItems: "center",
 
     marginTop: 18 * SCALE,
@@ -523,6 +603,7 @@ const styles = StyleSheet.create({
 
   sectionHeading: {
     marginTop: 23 * SCALE,
+
     marginBottom: 11 * SCALE,
   },
 
@@ -534,6 +615,7 @@ const styles = StyleSheet.create({
     color: colors.purple,
 
     fontSize: 10 * SCALE,
+
     fontWeight: "800",
 
     letterSpacing: 1,
@@ -543,6 +625,7 @@ const styles = StyleSheet.create({
     color: colors.white,
 
     fontSize: 17 * SCALE,
+
     fontWeight: "700",
 
     marginTop: 2 * SCALE,
@@ -566,6 +649,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
 
     borderWidth: 1,
+
     borderColor: colors.border,
 
     borderRadius: 16 * SCALE,
@@ -577,6 +661,7 @@ const styles = StyleSheet.create({
     minHeight: 62 * SCALE,
 
     flexDirection: "row",
+
     alignItems: "center",
 
     borderRadius: 10 * SCALE,
@@ -588,6 +673,7 @@ const styles = StyleSheet.create({
 
   categoryIcon: {
     width: 37 * SCALE,
+
     height: 37 * SCALE,
 
     borderRadius: 10 * SCALE,
@@ -595,9 +681,11 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface2,
 
     borderWidth: 1,
+
     borderColor: colors.border,
 
     alignItems: "center",
+
     justifyContent: "center",
 
     marginRight: 10 * SCALE,
@@ -617,6 +705,7 @@ const styles = StyleSheet.create({
     color: colors.muted,
 
     fontSize: 9 * SCALE,
+
     fontWeight: "600",
   },
 
@@ -626,14 +715,17 @@ const styles = StyleSheet.create({
 
   radio: {
     width: 20 * SCALE,
+
     height: 20 * SCALE,
 
     borderRadius: 10 * SCALE,
 
     borderWidth: 1,
+
     borderColor: colors.borderLight,
 
     alignItems: "center",
+
     justifyContent: "center",
   },
 
@@ -643,6 +735,7 @@ const styles = StyleSheet.create({
 
   radioDot: {
     width: 9 * SCALE,
+
     height: 9 * SCALE,
 
     borderRadius: 5 * SCALE,
@@ -666,6 +759,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
 
     borderWidth: 1,
+
     borderColor: colors.border,
 
     borderRadius: 16 * SCALE,
@@ -675,6 +769,7 @@ const styles = StyleSheet.create({
 
   inputHeader: {
     flexDirection: "row",
+
     alignItems: "center",
 
     marginBottom: 9 * SCALE,
@@ -684,6 +779,7 @@ const styles = StyleSheet.create({
     color: colors.white,
 
     fontSize: 9 * SCALE,
+
     fontWeight: "700",
 
     marginLeft: 7 * SCALE,
@@ -692,9 +788,12 @@ const styles = StyleSheet.create({
   textInput: {
     minHeight: 145 * SCALE,
 
+    maxHeight: 260 * SCALE,
+
     backgroundColor: colors.surface2,
 
     borderWidth: 1,
+
     borderColor: colors.border,
 
     borderRadius: 11 * SCALE,
@@ -704,12 +803,15 @@ const styles = StyleSheet.create({
     color: colors.white,
 
     fontSize: 9 * SCALE,
+
     lineHeight: 15 * SCALE,
   },
 
   characterRow: {
     flexDirection: "row",
+
     justifyContent: "space-between",
+
     alignItems: "center",
 
     marginTop: 8 * SCALE,
@@ -739,7 +841,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.purple,
 
     flexDirection: "row",
+
     alignItems: "center",
+
     justifyContent: "center",
 
     marginTop: 17 * SCALE,
@@ -747,6 +851,7 @@ const styles = StyleSheet.create({
 
   submitIcon: {
     width: 26 * SCALE,
+
     height: 26 * SCALE,
 
     borderRadius: 8 * SCALE,
@@ -754,6 +859,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
 
     alignItems: "center",
+
     justifyContent: "center",
 
     marginRight: 8 * SCALE,
@@ -763,6 +869,7 @@ const styles = StyleSheet.create({
     color: colors.background,
 
     fontSize: 9.5 * SCALE,
+
     fontWeight: "800",
 
     marginRight: 7 * SCALE,
@@ -782,9 +889,11 @@ const styles = StyleSheet.create({
     backgroundColor: colors.footer,
 
     borderWidth: 1,
+
     borderColor: colors.border,
 
     flexDirection: "row",
+
     alignItems: "center",
   },
 
@@ -794,6 +903,7 @@ const styles = StyleSheet.create({
     color: colors.mutedDark,
 
     fontSize: 7.5 * SCALE,
+
     lineHeight: 13 * SCALE,
 
     marginLeft: 7 * SCALE,

@@ -82,12 +82,6 @@ function CustomDrawerContent(props) {
           />
 
           <DrawerButton
-            title="Notifications"
-            active={currentRoute === "Notifications"}
-            onPress={() => navigate("Notifications")}
-          />
-
-          <DrawerButton
             title="Suggestions & Bugs"
             active={currentRoute === "SuggestionsBugs"}
             onPress={() => navigate("SuggestionsBugs")}
