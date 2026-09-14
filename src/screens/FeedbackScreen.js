@@ -80,7 +80,7 @@ export default function FeedbackScreen({ navigation }) {
   };
 
   // ==========================================================
-  // UI
+  // UI-
   // ==========================================================
 
   return (
@@ -92,8 +92,8 @@ export default function FeedbackScreen({ navigation }) {
       >
         <View style={styles.container}>
           {/* ====================================================
-              HEADER
-          ==================================================== */}
+            HEADER- 
+        ==================================================== */}
 
           <View style={styles.header}>
             <View style={styles.headerLeft}>

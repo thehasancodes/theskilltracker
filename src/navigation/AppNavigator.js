@@ -28,12 +28,14 @@ import {
   getStoredUser,
 } from "../api/authStorage";
 import { colors } from "../constants/colors";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const Drawer = createDrawerNavigator();
 const Stack = createNativeStackNavigator(); // newly added stack navigator for login screen
 
 function CustomDrawerContent(props) {
   const [storedUser, setStoredUser] = useState(null);
+  const insets = useSafeAreaInsets();
   const currentRoute = props.state.routeNames[props.state.index];
 
   useEffect(() => {
@@ -96,7 +98,14 @@ function CustomDrawerContent(props) {
       </DrawerContentScrollView>
 
       {/* Bottom User Section */}
-      <View style={styles.bottomSection}>
+      <View
+        style={[
+          styles.bottomSection,
+          // Keep the logout button clear of the Android system
+          // navigation bar on devices using 3-button navigation
+          { paddingBottom: Math.max(insets.bottom, 14) },
+        ]}
+      >
         <View style={styles.userRow}>
           <View style={styles.avatar}>
             <Text style={styles.avatarText}>{userInitial}</Text>
