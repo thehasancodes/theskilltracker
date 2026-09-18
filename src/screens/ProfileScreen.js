@@ -7,6 +7,7 @@ import {
   StyleSheet,
   Text,
   View,
+  RefreshControl,
 } from "react-native";
 
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -91,28 +92,31 @@ export default function ProfileScreen({ navigation }) {
   const [showSemesterTable, setShowSemesterTable] = useState(false);
   const [profile, setProfile] = useState(null);
   const [profileError, setProfileError] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
-  // Fetches the student profile data when the screen loads.
-  // If the request succeeds, the profile state is updated; if it fails, an error flag is set.
+  const loadProfile = async () => {
+    setProfileError(false);
+
+    try {
+      const data = await getProfileData();
+      setProfile(data);
+    } catch {
+      setProfileError(true);
+    }
+  };
+
   useEffect(() => {
-    let mounted = true;
-
-    getProfileData()
-      .then((data) => {
-        if (mounted) {
-          setProfile(data);
-        }
-      })
-      .catch(() => {
-        if (mounted) {
-          setProfileError(true);
-        }
-      });
-
-    return () => {
-      mounted = false;
-    };
+    loadProfile();
   }, []);
+
+  const handleRefresh = async () => {
+    try {
+      setRefreshing(true);
+      await loadProfile();
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   if (!profile) {
     return (
@@ -192,6 +196,13 @@ export default function ProfileScreen({ navigation }) {
         <ScrollView
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.content}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={handleRefresh}
+              tintColor={COLORS.purple}
+            />
+          }
         >
           {/* ==================================================
               STUDENT INFORMATION

@@ -23,6 +23,7 @@ import {
   StyleSheet,
   ScrollView,
   Pressable,
+  RefreshControl,
 } from "react-native";
 
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -60,36 +61,44 @@ export default function DashboardScreen({ navigation }) {
 
   const [retryKey, setRetryKey] = useState(0);
 
+  const [refreshing, setRefreshing] = useState(false);
+
   // ==========================================================
   // LOAD DASHBOARD DATA
   // ==========================================================
 
-  useEffect(() => {
-    let mounted = true;
-
+  const loadDashboard = async () => {
     setError(null);
 
-    Promise.all([getDashboardData(), getStoredUser()])
-      .then(([dashboardData, storedUser]) => {
-        if (mounted) {
-          setDashboard(dashboardData);
-          setUser(storedUser);
-        }
-      })
-      .catch((requestError) => {
-        if (mounted) {
-          setError(
-            requestError instanceof DashboardApiError
-              ? requestError.message
-              : "Unable to load dashboard.",
-          );
-        }
-      });
+    try {
+      const [dashboardData, storedUser] = await Promise.all([
+        getDashboardData(),
+        getStoredUser(),
+      ]);
 
-    return () => {
-      mounted = false;
-    };
+      setDashboard(dashboardData);
+      setUser(storedUser);
+    } catch (requestError) {
+      setError(
+        requestError instanceof DashboardApiError
+          ? requestError.message
+          : "Unable to load dashboard.",
+      );
+    }
+  };
+
+  useEffect(() => {
+    loadDashboard();
   }, [retryKey]);
+
+  const handleRefresh = async () => {
+    try {
+      setRefreshing(true);
+      await loadDashboard();
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   // ==========================================================
   // LOADING / ERROR SCREEN
@@ -264,6 +273,13 @@ export default function DashboardScreen({ navigation }) {
         <ScrollView
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.content}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={handleRefresh}
+              tintColor={colors.purple}
+            />
+          }
         >
           {/* ==================================================
               DASHBOARD HERO
