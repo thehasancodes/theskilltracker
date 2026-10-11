@@ -22,6 +22,7 @@ import FeedbackScreen from "../screens/FeedbackScreen";
 import NotificationScreen from "../screens/NotificationScreen";
 import McqApiScreen from "../screens/McqApiScreen";
 import LoginScreen from "../screens/LoginScreen";
+import KConnectHome from "../kconnect/navigator/knavigator";
 import {
   clearAuthSession,
   getAuthToken,
@@ -87,6 +88,12 @@ function CustomDrawerContent(props) {
             title="Suggestions & Bugs"
             active={currentRoute === "SuggestionsBugs"}
             onPress={() => navigate("SuggestionsBugs")}
+          />
+
+          <DrawerButton
+            title="KConnect"
+            active={currentRoute === "KConnectHome"}
+            onPress={() => navigate("KConnectHome")}
           />
 
           <DrawerButton
@@ -170,7 +177,7 @@ function DrawerButton({ title, active, onPress }) {
 function MainDrawer() {
   return (
     <Drawer.Navigator
-      initialRouteName="Dashboard"
+      initialRouteName="KConnectHome"
       drawerContent={(props) => <CustomDrawerContent {...props} />}
       screenOptions={{
         headerShown: false,
@@ -183,6 +190,7 @@ function MainDrawer() {
         overlayColor: "rgba(0,0,0,0.65)",
       }}
     >
+      <Drawer.Screen name="KConnectHome" component={KConnectHome} />
       <Drawer.Screen name="Dashboard" component={DashboardScreen} />
 
       <Drawer.Screen name="SectionLeaderboard" component={SectionLeaderBoard} />
