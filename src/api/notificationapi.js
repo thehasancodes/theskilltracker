@@ -8,6 +8,7 @@ const GENERAL_NOTIFICATIONS_URL =
 
 const SEEN_ASSIGNMENTS_KEY = "skilltracker.notification.assignmentIds";
 const ASSIGNMENT_NOTIFICATIONS_KEY = "skilltracker.notification.items";
+const READ_NOTIFICATION_IDS_KEY = "skilltracker.notification.readIds";
 const GENERAL_NOTIFICATION_READ_KEY =
   "skilltracker.notification.generalReadIds";
 
@@ -177,6 +178,13 @@ export async function markNotificationRead(notificationId) {
   );
 
   await saveStoredJson(ASSIGNMENT_NOTIFICATIONS_KEY, updatedNotifications);
+  const storedReadIds = await getStoredJson(READ_NOTIFICATION_IDS_KEY, []);
+
+  const localReadIds = new Set(storedReadIds.map((id) => String(id)));
+
+  localReadIds.add(String(notificationId));
+
+  await saveStoredJson(READ_NOTIFICATION_IDS_KEY, Array.from(localReadIds));
 
   const storedGeneralReadIds = await getStoredJson(
     GENERAL_NOTIFICATION_READ_KEY,
@@ -203,6 +211,9 @@ export async function getSemesterNotifications() {
     ASSIGNMENT_NOTIFICATIONS_KEY,
     [],
   );
+  const locallyReadIds = await getStoredJson(READ_NOTIFICATION_IDS_KEY, []);
+
+  const locallyReadIdSet = new Set(locallyReadIds.map((id) => String(id)));
 
   const assignmentIds = new Set(
     assignments.map((assignment) => String(getAssignmentId(assignment))),
@@ -285,6 +296,9 @@ export async function getSemesterNotifications() {
         ...notification,
         assignmentId: getAssignmentId(assignment),
         isLocked: isAssignmentLocked(assignment),
+        isRead:
+          notification.isRead === true ||
+          locallyReadIdSet.has(String(notification.id)),
         createdAt:
           notification.createdAt ||
           formatCreatedAt(assignmentCreatedAt) ||
