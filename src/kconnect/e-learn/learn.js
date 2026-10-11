@@ -1,6 +1,9 @@
-import React, { useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
+  ActivityIndicator,
+  Alert,
   Image,
+  Linking,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -12,63 +15,125 @@ import { StatusBar } from "expo-status-bar";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { colors } from "../../constants/colors";
 
-const semesters = ["Semester 1", "Semester 2", "Semester 3", "Semester 4"];
+// Replace with your existing e-SLM API endpoint.
+const ESLM_API_URL = "YOUR_EXISTING_ESLM_API_ENDPOINT";
 
-const courses = [
-  {
-    type: "Discipline Specific Course",
-    title: "English Social and Cultural History",
-  },
-  {
-    type: "Discipline Specific Course",
-    title: "English Poetry: Chaucer to the Neo-classical",
-  },
-  {
-    type: "Discipline Specific Course",
-    title: "English Drama: Elizabethan to Restoration",
-  },
-  { type: "Discipline Specific Elective", title: "Non-Fictional Prose" },
-  { type: "Value Added Course", title: "English Communication Skills" },
-  { type: "Ability Enhancement Course", title: "English for Media Studies" },
-];
+/* ============================= */
+/* COURSE CARD */
+/* ============================= */
 
-function CourseCard({ course }) {
+function CourseCard({ course, semester }) {
+  const openMaterial = async () => {
+    if (!course.fileUrl) {
+      Alert.alert(
+        "Material unavailable",
+        "A PDF or document link has not been provided for this material.",
+      );
+      return;
+    }
+
+    try {
+      await Linking.openURL(course.fileUrl);
+    } catch {
+      Alert.alert(
+        "Unable to open material",
+        "Please check the document link and try again.",
+      );
+    }
+  };
+
   return (
     <Pressable
       accessibilityRole="button"
+      accessibilityLabel={`Read ${course.title}`}
+      onPress={openMaterial}
       style={({ pressed }) => [styles.courseCard, pressed && styles.pressed]}
     >
       <Image
         source={require("../../../assets/allinone.png")}
         style={styles.universityLogo}
       />
-      <Text style={styles.universityName}>
-        Krishna Kanta Handique State Open University
-      </Text>
+
+      <Text style={styles.universityName}>Assam down town University</Text>
+
       <View style={styles.divider} />
+
       <View style={styles.typePill}>
-        <Text style={styles.typeText}>{course.type}</Text>
+        <Text style={styles.typeText}>{course.type || "Study Material"}</Text>
       </View>
+
       <Text style={styles.courseTitle}>{course.title}</Text>
+
       <View style={styles.bottomDivider} />
+
       <View style={styles.semesterPill}>
-        <Text style={styles.semesterText}>SEMESTER 1</Text>
+        <Text style={styles.semesterText}>{semester || "SEMESTER"}</Text>
+      </View>
+
+      <View style={styles.readIndicator}>
+        <Ionicons name="book-outline" size={14} color="#ffffff" />
+        <Text style={styles.readText}>Read material</Text>
       </View>
     </Pressable>
   );
 }
 
+/* ============================= */
+/* E-SLM SCREEN */
+/* ============================= */
+
 export default function ESlmScreen({ navigation }) {
-  const [selectedSemester, setSelectedSemester] = useState("Semester 1");
-  const [semesterMenuOpen, setSemesterMenuOpen] = useState(false);
+  const [materials, setMaterials] = useState([]);
+  const [programName, setProgramName] = useState("");
+  const [semesterName, setSemesterName] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+
+  /* ============================= */
+  /* FETCH MATERIALS FROM API */
+  /* ============================= */
+
+  const loadMaterials = useCallback(async () => {
+    setLoading(true);
+    setError(false);
+
+    try {
+      const response = await fetch(ESLM_API_URL);
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch study materials");
+      }
+
+      const data = await response.json();
+
+      // These values come from the API, not a user selection.
+      setProgramName(data.programName || "");
+      setSemesterName(data.semesterName || "");
+      setMaterials(Array.isArray(data.materials) ? data.materials : []);
+    } catch (err) {
+      setError(true);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadMaterials();
+  }, [loadMaterials]);
+
+  /* ============================= */
+  /* SCREEN UI */
+  /* ============================= */
 
   return (
     <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
       <StatusBar style="light" />
+
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.content}
       >
+        {/* Header */}
         <View style={styles.header}>
           <Pressable
             accessibilityLabel="Go back"
@@ -77,69 +142,118 @@ export default function ESlmScreen({ navigation }) {
           >
             <Ionicons name="arrow-back" size={25} color={colors.text} />
           </Pressable>
+
           <Text numberOfLines={1} style={styles.headerTitle}>
             e-SLM (Self Learning Material)
           </Text>
+
           <Pressable
-            accessibilityLabel="Refresh courses"
-            onPress={() => setSelectedSemester(selectedSemester)}
+            accessibilityLabel="Refresh study materials"
+            onPress={loadMaterials}
             style={styles.headerButton}
           >
             <Ionicons name="refresh" size={24} color={colors.text} />
           </Pressable>
         </View>
 
-        <View style={styles.semesterSelectorWrap}>
-          <Pressable
-            accessibilityRole="button"
-            onPress={() => setSemesterMenuOpen((open) => !open)}
-            style={styles.semesterSelector}
-          >
-            <Ionicons name="school-outline" size={27} color={colors.yellow} />
-            <Text style={styles.selectorLabel}>Select Semester:</Text>
-            <Text style={styles.selectedSemester}>{selectedSemester}</Text>
+        {/* Automatically assigned semester and course */}
+        {!loading && !error && (
+          <View style={styles.studentInfo}>
+            <View style={styles.infoIcon}>
+              <Ionicons name="school-outline" size={25} color={colors.yellow} />
+            </View>
+
+            <View style={styles.infoTextContainer}>
+              <Text style={styles.infoLabel}>YOUR PROGRAM</Text>
+
+              <Text style={styles.infoValue}>
+                {programName || "Program not available"}
+              </Text>
+
+              <Text style={styles.infoSemester}>
+                {semesterName || "Semester not available"}
+              </Text>
+            </View>
+          </View>
+        )}
+
+        {/* Loading */}
+        {loading && (
+          <View style={styles.stateContainer}>
+            <ActivityIndicator size="large" color={colors.yellow} />
+            <Text style={styles.stateText}>Loading study materials...</Text>
+          </View>
+        )}
+
+        {/* API error */}
+        {!loading && error && (
+          <View style={styles.stateContainer}>
             <Ionicons
-              name={semesterMenuOpen ? "chevron-up" : "chevron-down"}
-              size={18}
+              name="cloud-offline-outline"
+              size={38}
               color={colors.muted}
             />
-          </Pressable>
-          {semesterMenuOpen && (
-            <View style={styles.semesterMenu}>
-              {semesters.map((semester) => (
-                <Pressable
-                  key={semester}
-                  onPress={() => {
-                    setSelectedSemester(semester);
-                    setSemesterMenuOpen(false);
-                  }}
-                  style={styles.menuOption}
-                >
-                  <Text style={styles.menuOptionText}>{semester}</Text>
-                </Pressable>
+
+            <Text style={styles.stateText}>
+              Unable to load study materials.
+            </Text>
+
+            <Pressable onPress={loadMaterials} style={styles.retryButton}>
+              <Text style={styles.retryText}>Try again</Text>
+            </Pressable>
+          </View>
+        )}
+
+        {/* No materials */}
+        {!loading && !error && materials.length === 0 && (
+          <View style={styles.stateContainer}>
+            <Ionicons name="documents-outline" size={38} color={colors.muted} />
+
+            <Text style={styles.stateText}>
+              No study materials available for your semester yet.
+            </Text>
+          </View>
+        )}
+
+        {/* API-driven material cards */}
+        {!loading && !error && materials.length > 0 && (
+          <>
+            <View style={styles.sectionHeading}>
+              <Text style={styles.sectionTitle}>AVAILABLE STUDY MATERIALS</Text>
+
+              <Text style={styles.materialCount}>
+                {materials.length} materials
+              </Text>
+            </View>
+
+            <View style={styles.courseGrid}>
+              {materials.map((course, index) => (
+                <CourseCard
+                  key={course.id ?? `${course.title}-${index}`}
+                  course={course}
+                  semester={semesterName}
+                />
               ))}
             </View>
-          )}
-        </View>
-
-        <View style={styles.programHeading}>
-          <Ionicons name="school-outline" size={17} color={colors.muted} />
-          <Text style={styles.programText}>MASTER OF ARTS IN ENGLISH</Text>
-        </View>
-
-        <View style={styles.courseGrid}>
-          {courses.map((course) => (
-            <CourseCard key={course.title} course={course} />
-          ))}
-        </View>
+          </>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
 }
 
+/* ============================= */
+/* STYLES */
+/* ============================= */
+
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: colors.background },
-  content: { paddingBottom: 22 },
+  safeArea: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+  content: {
+    paddingBottom: 22,
+  },
   header: {
     height: 78,
     paddingHorizontal: 14,
@@ -157,69 +271,69 @@ const styles = StyleSheet.create({
     flex: 1,
     marginHorizontal: 8,
     color: colors.text,
-    fontSize: 25,
+    fontSize: 21,
     fontWeight: "500",
   },
-  semesterSelectorWrap: { marginHorizontal: 23, zIndex: 2 },
-  semesterSelector: {
-    minHeight: 78,
-    paddingHorizontal: 21,
+  studentInfo: {
+    marginHorizontal: 23,
+    marginBottom: 24,
+    padding: 16,
+    minHeight: 95,
     borderRadius: 14,
     backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.border,
     flexDirection: "row",
     alignItems: "center",
-    shadowColor: "#000000",
-    shadowOpacity: 0.12,
-    shadowRadius: 5,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 3,
   },
-  selectorLabel: {
-    marginLeft: 12,
-    color: colors.text,
-    fontSize: 16,
-    fontWeight: "800",
-  },
-  selectedSemester: {
-    flex: 1,
-    marginLeft: 18,
-    color: colors.text,
-    fontSize: 16,
-    fontWeight: "800",
-  },
-  semesterMenu: {
-    position: "absolute",
-    top: 83,
-    left: 0,
-    right: 0,
-    paddingVertical: 6,
+  infoIcon: {
+    width: 48,
+    height: 48,
     borderRadius: 12,
-    backgroundColor: colors.surface2,
-    borderWidth: 1,
-    borderColor: colors.border,
-    shadowColor: "#000000",
-    shadowOpacity: 0.18,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 3 },
-    elevation: 5,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.background,
   },
-  menuOption: { paddingHorizontal: 18, paddingVertical: 12 },
-  menuOptionText: { color: colors.text, fontSize: 14, fontWeight: "600" },
-  programHeading: {
-    marginTop: 22,
+  infoTextContainer: {
+    flex: 1,
+    marginLeft: 14,
+  },
+  infoLabel: {
+    color: colors.muted,
+    fontSize: 11,
+    fontWeight: "700",
+    letterSpacing: 0.6,
+  },
+  infoValue: {
+    marginTop: 5,
+    color: colors.text,
+    fontSize: 15,
+    fontWeight: "800",
+  },
+  infoSemester: {
+    marginTop: 5,
+    color: colors.yellow,
+    fontSize: 13,
+    fontWeight: "700",
+  },
+  sectionHeading: {
+    marginHorizontal: 23,
     marginBottom: 14,
-    marginHorizontal: 25,
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "space-between",
   },
-  programText: {
+  sectionTitle: {
+    flex: 1,
+    color: colors.muted,
+    fontSize: 12,
+    fontWeight: "700",
+    letterSpacing: 0.3,
+  },
+  materialCount: {
     marginLeft: 8,
     color: colors.muted,
-    fontSize: 15,
-    fontWeight: "700",
-    letterSpacing: 0.2,
+    fontSize: 11,
   },
   courseGrid: {
     paddingHorizontal: 19,
@@ -281,7 +395,7 @@ const styles = StyleSheet.create({
   },
   courseTitle: {
     flex: 1,
-    marginTop: 25,
+    marginTop: 20,
     color: "#ffffff",
     fontSize: 14,
     lineHeight: 19,
@@ -301,6 +415,47 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     backgroundColor: "rgba(255,255,255,0.18)",
   },
-  semesterText: { color: "#ffffff", fontSize: 9, fontWeight: "800" },
-  pressed: { opacity: 0.78 },
+  semesterText: {
+    color: "#ffffff",
+    fontSize: 9,
+    fontWeight: "800",
+  },
+  readIndicator: {
+    marginTop: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+  },
+  readText: {
+    color: "#ffffff",
+    fontSize: 10,
+    fontWeight: "600",
+  },
+  stateContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 30,
+    paddingVertical: 55,
+  },
+  stateText: {
+    marginTop: 12,
+    color: colors.muted,
+    fontSize: 14,
+    textAlign: "center",
+    lineHeight: 21,
+  },
+  retryButton: {
+    marginTop: 16,
+    paddingHorizontal: 22,
+    paddingVertical: 10,
+    borderRadius: 9,
+    backgroundColor: colors.primaryDark,
+  },
+  retryText: {
+    color: "#ffffff",
+    fontWeight: "700",
+  },
+  pressed: {
+    opacity: 0.78,
+  },
 });

@@ -36,6 +36,12 @@ const sections = [
         color: colors.red,
       },
       {
+        icon: "school-outline",
+        title: "Programmes",
+        caption: "Explore university programmes",
+        color: colors.blue,
+      },
+      {
         icon: "people-outline",
         title: "Mentoring Group",
         caption: "Messages from your mentors",
@@ -127,7 +133,8 @@ export default function KConnectHome({ navigation }) {
       "Help & Support": "Help",
       Assignments: "MCQ",
       Notices: "Notifications",
-      "Important Contact": "SuggestionsBugs",
+      "Important Contact": "ImportantContacts",
+      Programmes: "Programmes",
     };
     const destination = destinations[item.title];
     if (destination) navigation.navigate(destination);
@@ -155,7 +162,7 @@ export default function KConnectHome({ navigation }) {
             <View>
               <Text style={styles.brandName}>Krishna Kanta</Text>
               <Text style={styles.brandSubtitle}>
-                Handique State Open University
+                Assam down town University
               </Text>
             </View>
           </View>
