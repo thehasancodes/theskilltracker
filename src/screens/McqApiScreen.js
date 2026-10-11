@@ -3,6 +3,7 @@ import {
   ActivityIndicator,
   BackHandler,
   Pressable,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
@@ -168,6 +169,7 @@ export default function McqApiScreen({ navigation, route }) {
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
+  const [refreshing, setRefreshing] = useState(false);
   const autoSubmitInProgress = useRef(false);
 
   useFocusEffect(
@@ -216,8 +218,8 @@ export default function McqApiScreen({ navigation, route }) {
     return () => subscription.remove();
   }, [result]);
 
-  async function loadAssignments() {
-    setLoading(true);
+  async function loadAssignments({ showLoading = true } = {}) {
+    setLoading(showLoading);
     setError(null);
 
     try {
@@ -237,6 +239,15 @@ export default function McqApiScreen({ navigation, route }) {
       setError(getErrorMessage(requestError));
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleRefresh() {
+    try {
+      setRefreshing(true);
+      await loadAssignments({ showLoading: false });
+    } finally {
+      setRefreshing(false);
     }
   }
 
@@ -425,7 +436,16 @@ export default function McqApiScreen({ navigation, route }) {
 
   if (!assignment) {
     return (
-      <ScreenShell navigation={navigation}>
+      <ScreenShell
+        navigation={navigation}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            tintColor={colors.purple}
+          />
+        }
+      >
         <Text style={styles.pageTitle}>MCQ Assignments</Text>
         <Text style={styles.pageSubtitle}>Choose a test to begin.</Text>
         {error ? <ErrorBox message={error} onRetry={loadAssignments} /> : null}
@@ -582,7 +602,7 @@ export default function McqApiScreen({ navigation, route }) {
   );
 }
 
-function ScreenShell({ navigation, children, onBack }) {
+function ScreenShell({ navigation, children, onBack, refreshControl }) {
   return (
     <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
       <View style={styles.container}>
@@ -598,6 +618,7 @@ function ScreenShell({ navigation, children, onBack }) {
         <ScrollView
           contentContainerStyle={styles.content}
           showsVerticalScrollIndicator={false}
+          refreshControl={refreshControl}
         >
           {children}
         </ScrollView>

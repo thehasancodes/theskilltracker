@@ -22,6 +22,8 @@ import FeedbackScreen from "../screens/FeedbackScreen";
 import NotificationScreen from "../screens/NotificationScreen";
 import McqApiScreen from "../screens/McqApiScreen";
 import LoginScreen from "../screens/LoginScreen";
+import KConnectHomeScreen from "../kconnect/home/home";
+import ESlmScreen from "../kconnect/e-learn/learn";
 import {
   clearAuthSession,
   getAuthToken,
@@ -87,6 +89,12 @@ function CustomDrawerContent(props) {
             title="Suggestions & Bugs"
             active={currentRoute === "SuggestionsBugs"}
             onPress={() => navigate("SuggestionsBugs")}
+          />
+
+          <DrawerButton
+            title="KConnect"
+            active={currentRoute === "KConnectHome"}
+            onPress={() => navigate("KConnectHome")}
           />
 
           <DrawerButton
@@ -183,6 +191,8 @@ function MainDrawer() {
         overlayColor: "rgba(0,0,0,0.65)",
       }}
     >
+      <Drawer.Screen name="KConnectHome" component={KConnectHomeScreen} />
+      <Drawer.Screen name="ESLM" component={ESlmScreen} />
       <Drawer.Screen name="Dashboard" component={DashboardScreen} />
 
       <Drawer.Screen name="SectionLeaderboard" component={SectionLeaderBoard} />

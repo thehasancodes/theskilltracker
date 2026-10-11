@@ -7,6 +7,7 @@ import {
   Text,
   View,
   Pressable,
+  RefreshControl,
   useWindowDimensions,
 } from "react-native";
 
@@ -23,7 +24,7 @@ const HEADER_SCALE = 1.2;
 
 // ============================================================
 // BADGE
-// ============================================================ 
+// ============================================================
 
 function Badge({ children, variant = "purple" }) {
   return (
@@ -170,6 +171,8 @@ export default function SectionLeaderBoard({ navigation }) {
 
   const [error, setError] = useState(null);
 
+  const [refreshing, setRefreshing] = useState(false);
+
   // ==========================================================
   // LOAD SECTION LEADERBOARD
   // ==========================================================
@@ -178,9 +181,9 @@ export default function SectionLeaderBoard({ navigation }) {
     loadLeaderboard();
   }, []);
 
-  const loadLeaderboard = async () => {
+  const loadLeaderboard = async ({ showLoading = true } = {}) => {
     try {
-      setLoading(true);
+      setLoading(showLoading);
       setError(null);
 
       const [leaderboardData, storedUser] = await Promise.all([
@@ -199,6 +202,15 @@ export default function SectionLeaderBoard({ navigation }) {
       setError(error.message || "Unable to load leaderboard");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleRefresh = async () => {
+    try {
+      setRefreshing(true);
+      await loadLeaderboard({ showLoading: false });
+    } finally {
+      setRefreshing(false);
     }
   };
 
@@ -324,6 +336,13 @@ export default function SectionLeaderBoard({ navigation }) {
             },
           ]}
           showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={handleRefresh}
+              tintColor={colors.purple}
+            />
+          }
         >
           {/* ==================================================
               HERO
