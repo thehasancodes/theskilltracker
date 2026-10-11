@@ -1,17 +1,13 @@
 import React, { useEffect, useState } from "react";
-import {
-  Image,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 
 import { getStoredUser } from "../../api/authStorage";
 import { colors } from "../../constants/colors";
+const SCALE = 1.2;
+
+const HEADER_SCALE = 1.2;
 
 const sections = [
   {
@@ -145,31 +141,13 @@ export default function KConnectHome({ navigation }) {
             onPress={() => navigation.openDrawer()}
             style={styles.headerButton}
           >
-            <Ionicons name="menu-outline" size={24} color={colors.text} />
+            <Ionicons name="menu" size={26} color={colors.text} />
           </Pressable>
-          <View style={styles.brandRow}>
-            <Image
-              source={require("../../../assets/allinone.png")}
-              style={styles.logo}
-            />
-            <View>
-              <Text style={styles.brandName}>Krishna Kanta</Text>
-              <Text style={styles.brandSubtitle}>
-                Handique State Open University
-              </Text>
-            </View>
+
+          <View style={styles.headerTitleContainer}>
+            <Text style={styles.headerTitle}>Home</Text>
+            <Text style={styles.headerSubtitle}>KCONNECT</Text>
           </View>
-          <Pressable
-            accessibilityLabel="View notifications"
-            onPress={() => navigation.navigate("Notifications")}
-            style={styles.headerButton}
-          >
-            <Ionicons
-              name="notifications-outline"
-              size={21}
-              color={colors.text}
-            />
-          </Pressable>
         </View>
 
         <View style={styles.profilePanel}>
@@ -224,7 +202,7 @@ export default function KConnectHome({ navigation }) {
           <Text style={styles.feedbackText}>Submit Feedback</Text>
         </Pressable>
         <Text style={styles.version}>
-          v1.0.0 | Developed by IT Cell, KKHSOU
+          v1.0.0 | Developed by Archon - Mehedi , Sourav and Junevenson
         </Text>
       </ScrollView>
     </SafeAreaView>
@@ -235,29 +213,35 @@ const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: colors.background },
   content: { paddingBottom: 28 },
   topBar: {
-    minHeight: 72,
-    paddingHorizontal: 16,
+    minHeight: 70,
+    paddingHorizontal: 19,
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
-    backgroundColor: colors.surface,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
   },
-  brandRow: {
+
+  headerTitleContainer: {
     flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    marginHorizontal: 10,
+    marginLeft: 11,
   },
-  logo: { width: 38, height: 38, borderRadius: 19, marginRight: 10 },
-  brandName: { color: colors.text, fontSize: 14, fontWeight: "800" },
-  brandSubtitle: { color: colors.muted, fontSize: 9, marginTop: 2 },
+  headerTitle: { color: colors.text, fontSize: 19, fontWeight: "700" },
+  headerSubtitle: {
+    color: colors.muted,
+    fontSize: 9,
+    fontWeight: "700",
+    letterSpacing: 1,
+    marginTop: 3,
+  },
   headerButton: {
-    width: 36,
-    height: 36,
+    width: 42,
+    height: 42,
+    borderRadius: 11,
     alignItems: "center",
     justifyContent: "center",
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   profilePanel: {
     margin: 14,

@@ -8,6 +8,7 @@ export default function DashboardCard({
   title,
   description,
   solved,
+  showProgress,
   total,
   accent = "primary",
   onPress,
@@ -41,10 +42,11 @@ export default function DashboardCard({
       <Text style={styles.description}>{description}</Text>
 
       <View style={styles.divider} />
-
-      <Text style={styles.progress}>
-        Solved: <Text style={{ color: accentColor }}>{solved}</Text> / {total}
-      </Text>
+      {showProgress && (
+        <Text style={styles.progress}>
+          Solved: <Text style={{ color: accentColor }}>{solved}</Text> / {total}
+        </Text>
+      )}
     </Pressable>
   );
 }

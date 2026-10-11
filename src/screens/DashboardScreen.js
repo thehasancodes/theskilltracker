@@ -180,6 +180,8 @@ export default function DashboardScreen({ navigation }) {
       description:
         "Master fundamental data structures & algorithms through 300 curated industry-standard challenges.",
 
+      showProgress: true,
+
       solved: dashboard.totalLeetcodeSolved,
 
       total: 300,
@@ -198,8 +200,26 @@ export default function DashboardScreen({ navigation }) {
         "Internal assessments, MCQs, and programming labs for your current semester coursework.",
 
       solved: dashboard.totalLabsCompleted,
+      showProgress: true,
 
       total: dashboard.totalLabsCompleted,
+
+      accent: "cyan",
+    },
+
+    {
+      id: "FoCT",
+
+      type: "FoCT CONTENT",
+
+      title: "Study Content and Materials",
+
+      description:
+        "Notes, Papers, and PDF's for your current semester coursework and general content.",
+
+      // solved: dashboard.totalLabsCompleted,
+
+      // total: dashboard.totalLabsCompleted,
 
       accent: "cyan",
     },
@@ -294,12 +314,6 @@ export default function DashboardScreen({ navigation }) {
               </Text>
             </View>
 
-            {/* Hero Title */}
-
-            <Text style={styles.heroTitle}>MY STUDENT DASHBOARD</Text>
-
-            {/* Hero Subtitle */}
-
             <Text style={styles.heroSubtitle}>
               {degree} · {semester} Coursework & Practice Track Progress
             </Text>
@@ -329,6 +343,9 @@ export default function DashboardScreen({ navigation }) {
 
                   if (track.id === "labs") {
                     navigation.navigate("MCQ");
+                  }
+                  if (track.id === "FoCT") {
+                    navigation.navigate("KConnectHome");
                   }
                 }}
               />
@@ -562,7 +579,7 @@ const styles = StyleSheet.create({
   // ==========================================================
 
   heroBadge: {
-    borderWidth: 1,
+    borderWidth: 3,
 
     borderColor: colors.purple,
 
@@ -580,35 +597,17 @@ const styles = StyleSheet.create({
   heroBadgeText: {
     color: colors.purple,
 
-    fontSize: 9,
+    fontSize: 15,
 
     fontWeight: "700",
 
     letterSpacing: 1,
   },
 
-  // ==========================================================
-  // HERO TITLE
-  // ==========================================================
-
-  heroTitle: {
-    color: colors.text,
-
-    fontSize: 24,
-
-    fontWeight: "500",
-
-    textAlign: "center",
-  },
-
-  // ==========================================================
-  // HERO SUBTITLE
-  // ==========================================================
-
   heroSubtitle: {
     color: colors.blue,
 
-    fontSize: 10,
+    fontSize: 11,
 
     marginTop: 8,
 
