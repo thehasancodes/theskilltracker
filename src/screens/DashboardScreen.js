@@ -12,6 +12,7 @@
 // 5. Lab assignment progress
 // 6. API-based dashboard data
 // 7. Retry and logout handling
+//
 // ============================================================
 
 import React, { useEffect, useState } from "react";
@@ -37,6 +38,8 @@ import { DashboardApiError, getDashboardData } from "../api/dashboardApi";
 
 import { clearAuthSession, getStoredUser } from "../api/authStorage";
 
+import { getNotifications } from "../api/notificationapi";
+
 // ============================================================
 // CONSTANTS
 // ============================================================
@@ -59,6 +62,12 @@ export default function DashboardScreen({ navigation }) {
   const [error, setError] = useState(null);
 
   const [retryKey, setRetryKey] = useState(0);
+
+  // ==========================================================
+  // NOTIFICATION STATE
+  // ==========================================================
+
+  const [hasUnread, setHasUnread] = useState(false);
 
   // ==========================================================
   // LOAD DASHBOARD DATA
@@ -90,6 +99,48 @@ export default function DashboardScreen({ navigation }) {
       mounted = false;
     };
   }, [retryKey]);
+
+  // ==========================================================
+  // LOAD UNREAD NOTIFICATIONS
+  // ==========================================================
+
+  useEffect(() => {
+    let mounted = true;
+
+    const loadUnreadNotifications = async () => {
+      try {
+        const notifications = await getNotifications();
+
+        if (!mounted) {
+          return;
+        }
+
+        const unreadExists = notifications.some(
+          (notification) => !notification.isRead,
+        );
+
+        setHasUnread(unreadExists);
+      } catch (error) {
+        console.log("Unread notification error:", error);
+
+        if (mounted) {
+          setHasUnread(false);
+        }
+      }
+    };
+
+    loadUnreadNotifications();
+
+    const unsubscribe = navigation?.addListener(
+      "focus",
+      loadUnreadNotifications,
+    );
+
+    return () => {
+      mounted = false;
+      unsubscribe?.();
+    };
+  }, [navigation]);
 
   // ==========================================================
   // LOADING / ERROR SCREEN
@@ -232,9 +283,21 @@ export default function DashboardScreen({ navigation }) {
             ================================================== */}
 
             <View>
-              <Text style={styles.headerTitle}>Student Command Centre</Text>
+              <Text
+                style={styles.headerTitle}
+                numberOfLines={1}
+                ellipsizeMode="tail"
+              >
+                Student Command Centre
+              </Text>
 
-              <Text style={styles.welcome}>WELCOME {userName}</Text>
+              <Text
+                style={styles.welcomeText}
+                numberOfLines={1}
+                ellipsizeMode="tail"
+              >
+                WELCOME {userName}
+              </Text>
             </View>
           </View>
 
@@ -249,11 +312,19 @@ export default function DashboardScreen({ navigation }) {
               pressed && styles.pressed,
             ]}
           >
-            <Ionicons
-              name="notifications-outline"
-              size={22 * HEADER_SCALE}
-              color={colors.text}
-            />
+            <View style={styles.notificationIconContainer}>
+              <Ionicons
+                name="notifications-outline"
+                size={22 * HEADER_SCALE}
+                color={colors.text}
+              />
+
+              {/* ==================================================
+                  UNREAD NOTIFICATION DOT
+              ================================================== */}
+
+              {hasUnread && <View style={styles.unreadDot} />}
+            </View>
           </Pressable>
         </View>
 
@@ -480,15 +551,58 @@ const styles = StyleSheet.create({
   },
 
   // ==========================================================
+  // NOTIFICATION ICON
+  // ==========================================================
+
+  notificationIconContainer: {
+    position: "relative",
+
+    width: 22 * HEADER_SCALE,
+
+    height: 22 * HEADER_SCALE,
+
+    alignItems: "center",
+
+    justifyContent: "center",
+  },
+
+  // ==========================================================
+  // UNREAD NOTIFICATION DOT
+  // ==========================================================
+
+  unreadDot: {
+    position: "absolute",
+
+    top: -2,
+
+    right: -2,
+
+    width: 7,
+
+    height: 7,
+
+    borderRadius: 4,
+
+    backgroundColor: "#FF3B30",
+
+    borderWidth: 1,
+
+    borderColor: colors.surface,
+  },
+
+  // ==========================================================
   // HEADER TITLE
   // ==========================================================
+  headerTitleContainer: {
+    flex: 1,
+    minWidth: 0,
+  },
 
   headerTitle: {
     color: colors.text,
-
-    fontSize: 16 * HEADER_SCALE,
-
+    fontSize: 16,
     fontWeight: "700",
+    flexShrink: 1,
   },
 
   // ==========================================================
