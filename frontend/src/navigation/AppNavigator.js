@@ -25,7 +25,7 @@ import LoginScreen from "../screens/LoginScreen";
 import KConnectHomeScreen from "../kconnect/home/home";
 import ESlmScreen from "../kconnect/e-learn/learn";
 import ProgrammesScreen from "../kconnect/programmes/programme";
-import ContactScreen from "../kconnect/contacts/impContacts";
+import ImportantContactsScreen from "../kconnect/contacts/impContacts";
 import {
   clearAuthSession,
   getAuthToken,
@@ -196,7 +196,7 @@ function MainDrawer() {
       <Drawer.Screen name="KConnectHome" component={KConnectHomeScreen} />
       <Drawer.Screen name="ESLM" component={ESlmScreen} />
       <Drawer.Screen name="Programmes" component={ProgrammesScreen} />
-      <Drawer.Screen name="Contacts" component={ContactScreen} />
+      <Drawer.Screen name="Contacts" component={ImportantContactsScreen} />
 
       <Drawer.Screen name="Dashboard" component={DashboardScreen} />
 
