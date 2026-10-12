@@ -1,0 +1,14 @@
+{
+  "name": "theskilltracker",
+  "version": "1.0.0",
+  "private": true,
+  "description": "The Skill Tracker frontend and backend workspace",
+  "scripts": {
+    "backend": "npm --prefix backend run dev",
+    "backend:start": "npm --prefix backend start",
+    "frontend": "npm --prefix frontend start",
+    "frontend:android": "npm --prefix frontend run android",
+    "frontend:ios": "npm --prefix frontend run ios",
+    "frontend:web": "npm --prefix frontend run web"
+  }
+}

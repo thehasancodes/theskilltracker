@@ -1,0 +1,29 @@
+# Dependencies
+**/node_modules/
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Expo and React Native generated files
+**/.expo/
+**/dist/
+**/web-build/
+**/expo-env.d.ts
+**/.metro-health-check*
+**/ios/
+**/android/
+
+# Logs and local tooling
+*.log
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+.DS_Store
+.vscode/
+
+# Coverage and build output
+coverage/
+build/
+.cache/
