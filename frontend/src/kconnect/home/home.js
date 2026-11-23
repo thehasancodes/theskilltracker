@@ -26,12 +26,6 @@ const sections = [
         color: colors.purple,
       },
       {
-        icon: "library-outline",
-        title: "My Study Centre",
-        caption: "Your centre and coordinator",
-        color: colors.red,
-      },
-      {
         icon: "school-outline",
         title: "Programmes",
         caption: "Explore university programmes",
@@ -50,8 +44,8 @@ const sections = [
     items: [
       {
         icon: "business-outline",
-        title: "About KKHSOU",
-        caption: "University info and recognition",
+        title: "About FocT",
+        caption: "Department info and recognition",
         color: colors.red,
       },
       {
@@ -59,12 +53,6 @@ const sections = [
         title: "Help & Support",
         caption: "Get help with your studies",
         color: colors.blue,
-      },
-      {
-        icon: "search-outline",
-        title: "Find Study Centre",
-        caption: "Search centres by district",
-        color: colors.yellow,
       },
       {
         icon: "megaphone-outline",
@@ -82,6 +70,12 @@ const sections = [
         icon: "link-outline",
         title: "Quick Links",
         caption: "Useful university websites",
+        color: colors.blue,
+      },
+      {
+        icon: "link-outline",
+        title: "Forms & Downloads",
+        caption: "Download forms and resources",
         color: colors.blue,
       },
     ],
@@ -121,7 +115,7 @@ export default function KConnectHome({ navigation }) {
   const degree = user?.department || "Student";
   const semester = user?.semester
     ? `Semester ${user.semester}`
-    : "KKHSOU learner";
+    : "FocT learner";
 
   const navigate = (item) => {
     const destinations = {
@@ -129,8 +123,11 @@ export default function KConnectHome({ navigation }) {
       "Help & Support": "Help",
       Assignments: "MCQ",
       Notices: "Notifications",
-      "Important Contact": "ImportantContacts",
+      "Important Contact": "Contacts",
       Programmes: "Programmes",
+      "Forms & Downloads": "Forms",
+      "Quick Links": "QuickLinks",
+      "About FocT": "AboutFocT",
     };
     const destination = destinations[item.title];
     if (destination) navigation.navigate(destination);
@@ -153,12 +150,12 @@ export default function KConnectHome({ navigation }) {
 
           <View style={styles.headerTitleContainer}>
             <Text style={styles.headerTitle}>Home</Text>
-            <Text style={styles.headerSubtitle}>KCONNECT</Text>
+            <Text style={styles.headerSubtitle}>F-CONNECT</Text>
           </View>
         </View>
 
         <View style={styles.profilePanel}>
-          <Text style={styles.panelEyebrow}>KCONNECT</Text>
+          <Text style={styles.panelEyebrow}>F-CONNECT</Text>
           <Text style={styles.studentName}>{name.toUpperCase()}</Text>
           <Text style={styles.studentDegree}>{degree}</Text>
           <Text style={styles.studentMeta}>{semester}</Text>
@@ -174,6 +171,8 @@ export default function KConnectHome({ navigation }) {
             size={19}
             color={colors.yellow}
           />
+          {/* Important notices, it'll come from the backend in future, for now
+          it's hardcoded */}
           <Text style={styles.noticeText}>
             Keep your registered mobile number and email active.
           </Text>
