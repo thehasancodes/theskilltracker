@@ -216,6 +216,11 @@ export default function DashboardScreen({ navigation }) {
 
   const degree = user?.department || "";
 
+  const totalLabs =
+    dashboard.totalLabs ??
+    dashboard.totalLabsAssigned ??
+    dashboard.totalLabAssignments;
+
   // ==========================================================
   // DASHBOARD TRACKS
   // ==========================================================
@@ -251,9 +256,10 @@ export default function DashboardScreen({ navigation }) {
         "Internal assessments, MCQs, and programming labs for your current semester coursework.",
 
       solved: dashboard.totalLabsCompleted,
-      showProgress: true,
-
-      total: dashboard.totalLabsCompleted,
+      showProgress:
+        Number.isFinite(dashboard.totalLabsCompleted) &&
+        Number.isFinite(totalLabs),
+      total: totalLabs,
 
       accent: "cyan",
     },
@@ -321,7 +327,7 @@ export default function DashboardScreen({ navigation }) {
               </Text>
 
               <Text
-                style={styles.welcomeText}
+                style={styles.welcome}
                 numberOfLines={1}
                 ellipsizeMode="tail"
               >

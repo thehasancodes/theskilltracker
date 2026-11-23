@@ -34,6 +34,13 @@ export async function getDashboardData() {
     throw new DashboardApiError("Your session has expired.", { status: 401 });
   }
 
+  if (!DASHBOARD_URL) {
+    throw new DashboardApiError(
+      "The dashboard service is not configured. Set EXPO_PUBLIC_DASHBOARD_URI.",
+      { code: "DASHBOARD_URL_MISSING" },
+    );
+  }
+
   let response;
 
   try {
